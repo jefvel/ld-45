@@ -9,14 +9,19 @@ class Player extends FlxGroup {
     private var destLambda: Float = 6;
 
     private var speed = 67;
-    private var arm: Arm;
+    public var arm: Arm;
     private var horse: Horse;
 
     private var armRotation: Float;
 
+    private var horseDrag = 370.0;
+    private var shotRecoil = 190.0;
+
     override public function new() {
         super();
         horse = new Horse();
+        horse.mass = 100.0;
+        horse.drag.set(horseDrag, horseDrag);
         add(horse);
 
         arm = new Arm();
@@ -42,14 +47,20 @@ class Player extends FlxGroup {
         */
         horse.y = Math.max(horse.y, GameData.SkyLimit);
 
-        arm.x = horse.x - 30;
-        arm.y = horse.y - 30;
-        arm.angle = armRotation / Math.PI * 180 + 180;
+        arm.x = horse.x;
+        arm.y = horse.y - 60;
+
+        arm.angle = armRotation / Math.PI * 180;
 	}
 
-    public function setMoveDest(x:Float, y:Float) {
-        armRotation = Math.atan2(arm.y - y, arm.x - x);
+    public function shoot(x:Float, y:Float) {
+        var d = new flixel.math.FlxVector(arm.x - x, arm.y - y);
+        d.normalize();
+        d.scale(shotRecoil);
+        horse.velocity.add(d.x, d.y);
+        armRotation = Math.atan2(y - arm.y, x - arm.x);
     }
+
     public function setPosition(x:Float, y:Float) {
         horse.x = x;
         horse.y = y;

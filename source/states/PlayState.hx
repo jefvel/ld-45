@@ -4,6 +4,7 @@ import flixel.FlxSprite;
 import flixel.FlxG;
 import flixel.FlxState;
 import entities.Player;
+import entities.ProjectileCanvas;
 
 class PlayState extends FlxState
 {
@@ -14,11 +15,15 @@ class PlayState extends FlxState
 
 	var player:Player;
 
+	var projectileCanvas: ProjectileCanvas;
+
 	function spawn() {
 		player = new Player();
-		player.setPosition(GameData.SkyLimit, GameData.WorldWidth * 0.5);
+		player.setPosition(GameData.WorldWidth * 0.5, GameData.SkyLimit + 150);
 		add(player);
 
+		projectileCanvas = new ProjectileCanvas();
+		add(projectileCanvas);
 	}
 
 	override public function create():Void
@@ -39,7 +44,13 @@ class PlayState extends FlxState
 		super.update(elapsed);
 		if (FlxG.mouse.justPressed) {
 			var worldPos = FlxG.mouse.getWorldPosition();
-			player.setMoveDest(worldPos.x, worldPos.y);
+			var arm = player.arm;
+			player.shoot(worldPos.x, worldPos.y);
+			var v = new flixel.math.FlxVector(worldPos.x - arm.x, worldPos.y - arm.y);
+			v.normalize();
+			v.scale(500);
+
+			projectileCanvas.addShot(arm.x, arm.y, arm.x + v.x, arm.y + v.y);
 		}
 	}
 }
