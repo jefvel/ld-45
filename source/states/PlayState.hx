@@ -4,9 +4,11 @@ import GameData;
 import flixel.FlxSprite;
 import flixel.FlxG;
 import flixel.FlxState;
+import flixel.math.FlxPoint;
 import entities.Player;
 import entities.ProjectileCanvas;
 import entities.Civilian;
+import entities.ShotTools;
 
 class PlayState extends FlxState
 {
@@ -19,6 +21,8 @@ class PlayState extends FlxState
 
 	var projectileCanvas: ProjectileCanvas;
 	var saloon: FlxSprite;
+
+	var npcs: Array<FlxSprite>;
 
 	function spawn() {
 		player = new Player();
@@ -42,12 +46,14 @@ class PlayState extends FlxState
 			}
 			add(civilian);
 			civilian.setNewDest();
+			npcs.push(civilian);
 		}
 	}
 
 	override public function create():Void
 	{
 		super.create();
+		npcs = [];
 		ground = new FlxSprite();
 		ground.makeGraphic(FlxG.width, FlxG.height, 0xffe8b796);
 		add(ground);
@@ -77,7 +83,30 @@ class PlayState extends FlxState
 			v.normalize();
 			v.scale(500);
 
-			projectileCanvas.addShot(arm.x, arm.y, arm.x + v.x, arm.y + v.y);
+			var gunPos = new FlxPoint(arm.x, arm.y);
+
+			var tpos = new FlxPoint(arm.x + v.x, arm.y + v.y);
+
+			var target: FlxSprite = null;
+			var d = Math.POSITIVE_INFINITY;
+			for (npc in npcs) {
+				var dist = ShotTools.lineHitsSprite(gunPos, tpos, npc);
+				if (dist < d) {
+					d = dist;
+					target = npc;
+				}
+			}
+
+			if (target != null) {
+				v.normalize();
+				remove(target);
+				npcs.remove(target);
+				v.scale(d);
+				tpos.x = gunPos.x + v.x;
+				tpos.y = gunPos.y + v.y;
+			}
+
+			projectileCanvas.addShot(gunPos.x, gunPos.y, tpos.x, tpos.y);
 		}
 	}
 }

@@ -2,6 +2,15 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+            "name": "HTML5",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://127.0.0.1:3000",
+            "sourceMaps": true,
+            "webRoot": "${workspaceFolder}",
+            "preLaunchTask": "debug: html5"
+        },
+		{
 			"name": "Build + Debug",
 			"type": "lime",
 			"request": "launch"
