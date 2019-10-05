@@ -1,10 +1,12 @@
 package states;
 
+import GameData;
 import flixel.FlxSprite;
 import flixel.FlxG;
 import flixel.FlxState;
 import entities.Player;
 import entities.ProjectileCanvas;
+import entities.Civilian;
 
 class PlayState extends FlxState
 {
@@ -25,6 +27,22 @@ class PlayState extends FlxState
 
 		projectileCanvas = new ProjectileCanvas();
 		add(projectileCanvas);
+
+		// Spawn civilians
+		for (i in 0...10) {
+			var civilian = new Civilian();
+			var yPos = (Math.random() * FlxG.height);
+			if (yPos < GameData.SkyLimit) {
+				yPos += GameData.SkyLimit;
+			}
+			if (Math.random() > 0.5) {
+				civilian.setPosition(0, yPos);
+			} else {
+				civilian.setPosition(GameData.WorldWidth + civilian.width, yPos);
+			}
+			add(civilian);
+			civilian.setNewDest();
+		}
 	}
 
 	override public function create():Void
