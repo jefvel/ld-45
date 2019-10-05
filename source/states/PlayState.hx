@@ -8,11 +8,8 @@ import flixel.math.FlxPoint;
 import entities.Player;
 import entities.ProjectileCanvas;
 import entities.Civilian;
-<<<<<<< HEAD
 import entities.ShotTools;
-=======
 import entities.Enemy;
->>>>>>> 237f5ca84f7e77086b93a98ffa4cae3ce4dc43af
 
 class PlayState extends FlxState
 {
@@ -66,7 +63,7 @@ class PlayState extends FlxState
 			}
 			add(enemy);
 			enemy.move();
-			npcs.push(civilian);
+			npcs.push(enemy);
 		}
 	}
 
