@@ -20,10 +20,10 @@ class Enemy extends FlxSprite {
     // Shooting
     public static var shootableEntities = new Array<FlxSprite>();
 	var projectileCanvas: ProjectileCanvas;
-    var detectRadius: Float = 90;
+    var detectRadius: Float = 190;
     var shootTarget: FlxSprite;
     var reloadTime: Float = 1.7;
-    var shootTimer: FlxTimer;
+    var reloadTimer: FlxTimer;
 
     // Movement
     var destX: Float = 0;
@@ -31,7 +31,7 @@ class Enemy extends FlxSprite {
     var destLambda: Float = 5;
     var speed: Float = 50;
     var shotRecoil = 120.0;
-    var enemyDrag = 370.0;
+    var enemyDrag = 1.0;
     var restTimer: FlxTimer;
     
     override public function new() {
@@ -40,10 +40,9 @@ class Enemy extends FlxSprite {
      
         offset.set(14, 48);
         updateHitbox();
-        mass = 100.0;
         drag.set(enemyDrag, enemyDrag);
 		
-        shootTimer = new FlxTimer();
+        reloadTimer = new FlxTimer();
         
         restTimer = new FlxTimer();
         restTimer.onComplete = restTimerComplete;
@@ -59,12 +58,10 @@ class Enemy extends FlxSprite {
                     shoot();
                 }
             case Shooting:
-                if (shootTimer.finished) {
-                    if (scanForTarget()) {
-                        shoot();
-                    } else {
-                        move();
-                    }
+                if (scanForTarget()) {
+                    shoot();
+                } else {
+                    move();
                 }
             case Looting:
             case Dead:
@@ -131,7 +128,9 @@ class Enemy extends FlxSprite {
     }
 
     public function scanForTarget(): Bool {
-        if (!checkTarget(shootTarget)) {
+        if (checkTarget(shootTarget)) {
+            return true;
+        } else {
             for (e in shootableEntities) {
                 if (checkTarget(e)) {
                     shootTarget = e;
@@ -139,7 +138,6 @@ class Enemy extends FlxSprite {
                     return true;
                 }
             }
-            return false;
         }
         return false;
     }
@@ -160,10 +158,11 @@ class Enemy extends FlxSprite {
 
     private function shoot() {
         if (this.curState != Shooting) {
+            this.velocity.set(0, 0);
             this.curState = Shooting;
         }
 
-        if (shootTimer.timeLeft == 0) {
+        if (reloadTimer.timeLeft == 0) {
             // Shoot
             var worldPos = shootTarget.getPosition();
             var v = new flixel.math.FlxVector(worldPos.x - x, worldPos.y - y);
@@ -186,14 +185,13 @@ class Enemy extends FlxSprite {
 
             if (target != null) {
                 ShotTools.NpcHitSignal.dispatch(target);
-                v.normalize();
                 v.scale(d);
                 tpos.x = gunPos.x + v.x;
                 tpos.y = gunPos.y + v.y;
             }
 
             projectileCanvas.addShot(gunPos.x, gunPos.y, tpos.x, tpos.y);
-            shootTimer.start(reloadTime);
+            reloadTimer.start(reloadTime);
         }
     }
 

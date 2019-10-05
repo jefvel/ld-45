@@ -33,7 +33,7 @@ class PlayState extends FlxState
 		add(projectileCanvas);
 
 		// Spawn civilians
-		for (i in 0...5) {
+		for (i in 0...0) {
 			var civilian = new Civilian();
 			var yPos = (Math.random() * FlxG.height);
 			if (yPos < GameData.SkyLimit) {
@@ -51,7 +51,7 @@ class PlayState extends FlxState
 		
 		// Spawn enemies 
 		// Do last so it can collect shootable entities in static class member
-		for (i in 0...5) {
+		for (i in 0...1) {
 			var enemy = new Enemy();
 			var yPos = (Math.random() * FlxG.height);
 			if (yPos < GameData.SkyLimit) {
@@ -120,7 +120,6 @@ class PlayState extends FlxState
 
 			if (target != null) {
 				ShotTools.NpcHitSignal.dispatch(target);
-				v.normalize();
 				v.scale(d);
 				tpos.x = gunPos.x + v.x;
 				tpos.y = gunPos.y + v.y;
