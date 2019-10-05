@@ -26,7 +26,7 @@ class PlayState extends FlxState
 
 		projectileCanvas = new ProjectileCanvas();
 		add(projectileCanvas);
-		
+
 		// Spawn civilians
 		for (i in 0...10) {
 			var civilian = new Civilian();
@@ -35,11 +35,12 @@ class PlayState extends FlxState
 				yPos += GameData.SkyLimit;
 			}
 			if (Math.random() > 0.5) {
-				civilian.setPosition(0 /* - civilian.width */, yPos);
+				civilian.setPosition(0, yPos);
 			} else {
-				civilian.setPosition(GameData.WorldWidth /* + civilian.width */, yPos);
+				civilian.setPosition(GameData.WorldWidth + civilian.width, yPos);
 			}
 			add(civilian);
+			civilian.setNewDest();
 		}
 	}
 

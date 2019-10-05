@@ -1,7 +1,6 @@
 package entities;
 
 using flixel.util.FlxSpriteUtil;
-
 import flixel.FlxG;
 import flixel.util.FlxColor;
 
@@ -12,6 +11,7 @@ typedef Projectile = {
     var y2: Float;
     var lifeTime: Float;
 }
+
 
 class ProjectileCanvas extends flixel.FlxSprite {
     var shots:Array<Projectile>;
@@ -24,17 +24,17 @@ class ProjectileCanvas extends flixel.FlxSprite {
 
     public override function update(elapsed: Float) {
         super.update(elapsed);
-        fill(FlxColor.TRANSPARENT);
+        this.fill(FlxColor.TRANSPARENT);
         var lineStyle:LineStyle = { color: FlxColor.WHITE, thickness: 2 };
         for (shot in shots) {
             lineStyle.color.alpha = Std.int(255 * (shot.lifeTime / 0.2));
-            drawLine(shot.x1, shot.y1, shot.x2, shot.y2, lineStyle);
+            this.drawLine(shot.x1, shot.y1, shot.x2, shot.y2, lineStyle);
             shot.lifeTime -= elapsed;
             if (shot.lifeTime <= 0) {
                 shots.remove(shot);
             }
         }
-        drawLine(-10.0, -10.0, -10.0, -10.0);
+        this.drawLine(-10.0, -10.0, -10.0, -10.0);
     }
 
     public function addShot(x1, y1, x2, y2) {
