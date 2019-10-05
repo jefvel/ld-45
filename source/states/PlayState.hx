@@ -12,11 +12,12 @@ class PlayState extends FlxState
 	var ground:FlxSprite;
 	var sky:FlxSprite;
 
-	var horse:Player;
+	var player:Player;
 
 	function spawn() {
-		horse = new Player();
-		add(horse);
+		player = new Player();
+		player.setPosition(GameData.SkyLimit, GameData.WorldWidth * 0.5);
+		add(player);
 
 	}
 
@@ -38,7 +39,7 @@ class PlayState extends FlxState
 		super.update(elapsed);
 		if (FlxG.mouse.justPressed) {
 			var worldPos = FlxG.mouse.getWorldPosition();
-			horse.setMoveDest(worldPos.x, worldPos.y);
+			player.setMoveDest(worldPos.x, worldPos.y);
 		}
 	}
 }
