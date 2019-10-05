@@ -3,8 +3,11 @@ package entities;
 import flixel.math.FlxPoint;
 import flixel.math.FlxVector;
 import flixel.FlxSprite;
+import flixel.util.FlxSignal;
 
 class ShotTools {
+	public static var NpcHitSignal = new FlxTypedSignal<FlxSprite->Void>();
+    
     static inline var EPS = 0.00000001;
     // Returns Math.POSITIVE_INFINITY if no hit
     static function lineVsLine(a1:FlxPoint, a2: FlxPoint, b1:FlxPoint, b2:FlxPoint, out: FlxPoint): Float {

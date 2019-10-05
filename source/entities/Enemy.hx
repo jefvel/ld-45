@@ -3,6 +3,7 @@ package entities;
 import flixel.FlxG;
 import flixel.util.FlxTimer;
 import flixel.FlxSprite;
+import flixel.math.FlxPoint;
 
 enum EnemyState {
     Moving;
@@ -14,16 +15,24 @@ enum EnemyState {
 }
 
 class Enemy extends FlxSprite {
-    private var curState = None;
+    var curState = None;
 
-    private var detectRadius: Float = 150;
+    // Shooting
+    public static var shootableEntities = new Array<FlxSprite>();
+	var projectileCanvas: ProjectileCanvas;
+    var detectRadius: Float = 190;
+    var shootTarget: FlxSprite;
+    var reloadTime: Float = 1.7;
+    var reloadTimer: FlxTimer;
 
-    private var destX: Float = 0;
-    private var destY: Float = 0;
-    private var destLambda: Float = 5;
-    private var speed: Float = 50;
-
-    private var timer: FlxTimer;
+    // Movement
+    var destX: Float = 0;
+    var destY: Float = 0;
+    var destLambda: Float = 5;
+    var speed: Float = 50;
+    var shotRecoil = 120.0;
+    var enemyDrag = 1.0;
+    var restTimer: FlxTimer;
     
     override public function new() {
         super();
@@ -31,38 +40,56 @@ class Enemy extends FlxSprite {
      
         offset.set(14, 48);
         updateHitbox();
+        drag.set(enemyDrag, enemyDrag);
 		
-        timer = new FlxTimer();
-        timer.onComplete = timerComplete;
+        reloadTimer = new FlxTimer();
+        
+        restTimer = new FlxTimer();
+        restTimer.onComplete = restTimerComplete;
     }
 
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+
         switch curState {
             case Resting:
+                if (scanForTarget()) {
+                    shoot();
+                }
             case Shooting:
+                if (scanForTarget()) {
+                    shoot();
+                } else {
+                    move();
+                }
             case Looting:
             case Dead:
-            default:
-                var dx = destX - x;
-                var dy = destY - y;
-                var d = Math.sqrt(dy * dy + dx * dx);
-                if (d < destLambda) {
-                    this.velocity.set(0, 0);
-                    // Half chance to rest or keep moving
-                    if (Math.random() > 0.5) {
-                        rest();
-                    } else {
-                        move();
+            case Moving:
+                if (scanForTarget()) {
+                    shoot();
+                } else {
+                    var dx = destX - x;
+                    var dy = destY - y;
+                    var d = Math.sqrt(dy * dy + dx * dx);
+                    if (d < destLambda) {
+                        this.velocity.set(0, 0);
+                        // Half chance to rest or keep moving
+                        if (Math.random() > 0.5) {
+                            rest();
+                        } else {
+                            move();
+                        }
                     }
                 }
+            default:
+                move();
         }
 	}
 
     public function rest() {
         curState = Resting;
-        timer.start(Math.random() * 10.0, timerComplete, 1);
+        restTimer.start(Math.random() * 10.0, restTimerComplete, 1);
     }
     
     public function move() {
@@ -100,11 +127,75 @@ class Enemy extends FlxSprite {
         this.velocity.set(speed * dx, speed * dy);
     }
 
-    public function detectTarget():Bool {
+    public function scanForTarget(): Bool {
+        if (checkTarget(shootTarget)) {
+            return true;
+        } else {
+            for (e in shootableEntities) {
+                if (checkTarget(e)) {
+                    shootTarget = e;
+                    curState = Shooting;
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
-    function timerComplete(timer:FlxTimer) {
+    public function checkTarget(entity: FlxSprite = null): Bool {
+        if (entity != null) {
+            var dx = entity.x - this.x;
+            var dy = entity.y - this.y;
+            var d = Math.sqrt(dy * dy + dx * dx);
+            return d < detectRadius;
+        }
+        return false;
+    }
+
+    public function setProjectileCanvas(canvas: ProjectileCanvas) {
+        this.projectileCanvas = canvas;
+    }
+
+    private function shoot() {
+        if (this.curState != Shooting) {
+            this.velocity.set(0, 0);
+            this.curState = Shooting;
+        }
+
+        if (reloadTimer.timeLeft == 0) {
+            // Shoot
+            var worldPos = shootTarget.getPosition();
+            var v = new flixel.math.FlxVector(worldPos.x - x, worldPos.y - y);
+            v.normalize();
+            v.scale(500);
+
+            var gunPos = new FlxPoint(x, y);
+
+            var tpos = new FlxPoint(x + v.x, y + v.y);
+
+            var target: FlxSprite = null;
+            var d = Math.POSITIVE_INFINITY;
+            for (npc in shootableEntities) {
+                var dist = ShotTools.lineHitsSprite(gunPos, tpos, npc);
+                if (dist < d) {
+                    d = dist;
+                    target = npc;
+                }
+            }
+
+            if (target != null) {
+                ShotTools.NpcHitSignal.dispatch(target);
+                v.scale(d);
+                tpos.x = gunPos.x + v.x;
+                tpos.y = gunPos.y + v.y;
+            }
+
+            projectileCanvas.addShot(gunPos.x, gunPos.y, tpos.x, tpos.y);
+            reloadTimer.start(reloadTime);
+        }
+    }
+
+    function restTimerComplete(timer:FlxTimer) {
         move();
     }
 }

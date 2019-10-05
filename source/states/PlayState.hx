@@ -31,12 +31,13 @@ class PlayState extends FlxState
 		player = new Player();
 		player.setPosition(GameData.WorldWidth * 0.5, GameData.SkyLimit + 150);
 		add(player);
+		Enemy.shootableEntities.push(player.arm);
 
 		projectileCanvas = new ProjectileCanvas();
 		add(projectileCanvas);
 
 		// Spawn civilians
-		for (i in 0...5) {
+		for (i in 0...0) {
 			var civilian = new Civilian();
 			var yPos = (Math.random() * FlxG.height);
 			if (yPos < GameData.SkyLimit) {
@@ -48,12 +49,13 @@ class PlayState extends FlxState
 				civilian.setPosition(GameData.WorldWidth + civilian.width, yPos);
 			}
 			add(civilian);
-			civilian.move();
 			npcs.push(civilian);
+			Enemy.shootableEntities.push(civilian);
 		}
 		
-		// Spawn enemies
-		for (i in 0...5) {
+		// Spawn enemies 
+		// Do last so it can collect shootable entities in static class member
+		for (i in 0...1) {
 			var enemy = new Enemy();
 			var yPos = (Math.random() * FlxG.height);
 			if (yPos < GameData.SkyLimit) {
@@ -65,7 +67,7 @@ class PlayState extends FlxState
 				enemy.setPosition(GameData.WorldWidth + enemy.width, yPos);
 			}
 			add(enemy);
-			enemy.move();
+			enemy.setProjectileCanvas(projectileCanvas);
 			npcs.push(enemy);
 		}
 	}
@@ -73,6 +75,7 @@ class PlayState extends FlxState
 	override public function create():Void
 	{
 		super.create();
+		ShotTools.NpcHitSignal.add(npcHitCallback);
 
 		gunShotSound = FlxG.sound.load(AssetPaths.gunshot__ogg);
 		crushSound = FlxG.sound.load(AssetPaths.death__ogg);
@@ -123,8 +126,7 @@ class PlayState extends FlxState
 			}
 
 			if (target != null) {
-				remove(target);
-				npcs.remove(target);
+				ShotTools.NpcHitSignal.dispatch(target);
 				v.scale(d);
 				tpos.x = gunPos.x + v.x;
 				tpos.y = gunPos.y + v.y;
@@ -135,6 +137,14 @@ class PlayState extends FlxState
 			gunShotSound.play();
 
 			projectileCanvas.addShot(gunPos.x, gunPos.y, tpos.x, tpos.y);
+		}
+	}
+
+	function npcHitCallback(target: FlxSprite) {
+		remove(target);
+		npcs.remove(target);
+		if (Enemy.shootableEntities.indexOf(target) > -1) {
+			Enemy.shootableEntities.remove(target);
 		}
 	}
 }
