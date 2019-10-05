@@ -15,6 +15,8 @@ typedef Projectile = {
 
 class ProjectileCanvas extends flixel.FlxSprite {
     var shots:Array<Projectile>;
+    var bulletLifetime = 0.2;
+
     public function new() {
         super();
         shots = [];
@@ -25,9 +27,11 @@ class ProjectileCanvas extends flixel.FlxSprite {
     public override function update(elapsed: Float) {
         super.update(elapsed);
         this.fill(FlxColor.TRANSPARENT);
-        var lineStyle:LineStyle = { color: FlxColor.WHITE, thickness: 2 };
+        var lineStyle:LineStyle = { color: FlxColor.WHITE, thickness: 4, capsStyle: openfl.display.CapsStyle.SQUARE };
         for (shot in shots) {
-            lineStyle.color.alpha = Std.int(255 * (shot.lifeTime / 0.2));
+            var lt = shot.lifeTime / bulletLifetime;
+            lineStyle.color.alpha = Std.int(255 * lt);
+            lineStyle.thickness = 2 + (1.0 - lt) * 2;
             this.drawLine(shot.x1, shot.y1, shot.x2, shot.y2, lineStyle);
             shot.lifeTime -= elapsed;
             if (shot.lifeTime <= 0) {
@@ -43,7 +47,7 @@ class ProjectileCanvas extends flixel.FlxSprite {
             y1: y1,
             x2: x2,
             y2: y2,
-            lifeTime: 0.2,
+            lifeTime: bulletLifetime,
         });
     }
 }
