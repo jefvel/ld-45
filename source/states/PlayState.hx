@@ -45,6 +45,7 @@ class PlayState extends FlxState
 			}
 			add(civilian);
 			civilian.move();
+			npcs.push(enemy);
 		}
 		
 		// Spawn enemies
