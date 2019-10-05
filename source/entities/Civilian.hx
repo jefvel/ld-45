@@ -27,6 +27,7 @@ class Civilian extends FlxSprite {
         loadGraphic(AssetPaths.civilian__png);
      
         offset.set(14, 48);
+        updateHitbox();
 		
         timer = new FlxTimer();
         timer.onComplete = timerComplete;

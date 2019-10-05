@@ -86,13 +86,14 @@ class PlayState extends FlxState
 		saloon.loadGraphic(AssetPaths.saloon__png);
 		add(saloon);
 
-
 		spawn();
 	}
 
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+
+		ShotTools.hits = projectileCanvas;
 		if (FlxG.mouse.justPressed) {
 			var worldPos = FlxG.mouse.getWorldPosition();
 			var arm = player.arm;
@@ -116,7 +117,6 @@ class PlayState extends FlxState
 			}
 
 			if (target != null) {
-				v.normalize();
 				remove(target);
 				npcs.remove(target);
 				v.scale(d);

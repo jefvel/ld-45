@@ -28,6 +28,7 @@ class Enemy extends FlxSprite {
         loadGraphic(AssetPaths.enemy__png);
      
         offset.set(14, 48);
+        updateHitbox();
 		
         timer = new FlxTimer();
         timer.onComplete = timerComplete;
