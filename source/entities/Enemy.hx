@@ -4,15 +4,16 @@ import flixel.FlxG;
 import flixel.util.FlxTimer;
 import flixel.FlxSprite;
 
-enum CivilianState {
+enum EnemyState {
     Moving;
     Resting;
+    Shooting;
     Looting;
     Dead;
     None;
 }
 
-class Civilian extends FlxSprite {
+class Enemy extends FlxSprite {
     private var curState = None;
 
     private var destX: Float = 0;
@@ -24,7 +25,7 @@ class Civilian extends FlxSprite {
     
     override public function new() {
         super();
-        loadGraphic(AssetPaths.civilian__png);
+        loadGraphic(AssetPaths.enemy__png);
      
         offset.set(14, 48);
 		
@@ -37,6 +38,7 @@ class Civilian extends FlxSprite {
 		super.update(elapsed);
         switch curState {
             case Resting:
+            case Shooting:
             case Looting:
             case Dead:
             default:
@@ -59,9 +61,10 @@ class Civilian extends FlxSprite {
         curState = Resting;
         timer.start(Math.random() * 10.0, timerComplete, 1);
     }
-
+    
     public function move() {
         curState = Moving;
+
         var yPos = Math.random() * FlxG.height;
         if (yPos < GameData.SkyLimit) {
             yPos += GameData.SkyLimit;
@@ -77,7 +80,6 @@ class Civilian extends FlxSprite {
     }
 
     public function setMoveDest(x:Float, y:Float) {
-        // Store destination
         destX = x;
         destY = y;
 
