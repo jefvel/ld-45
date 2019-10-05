@@ -5,6 +5,7 @@ import flixel.FlxSprite;
 import flixel.FlxG;
 import flixel.FlxState;
 import flixel.math.FlxPoint;
+import flixel.system.FlxSound;
 import entities.Player;
 import entities.ProjectileCanvas;
 import entities.Civilian;
@@ -22,6 +23,9 @@ class PlayState extends FlxState
 	var saloon: FlxSprite;
 
 	var npcs: Array<FlxSprite>;
+
+	var gunShotSound: FlxSound;
+	var crushSound: FlxSound;
 
 	function spawn() {
 		player = new Player();
@@ -69,6 +73,11 @@ class PlayState extends FlxState
 	override public function create():Void
 	{
 		super.create();
+
+		gunShotSound = FlxG.sound.load(AssetPaths.gunshot__wav);
+		crushSound = FlxG.sound.load(AssetPaths.death__wav);
+
+
 		npcs = [];
 		ground = new FlxSprite();
 		ground.makeGraphic(FlxG.width, FlxG.height, 0xffe8b796);
@@ -91,7 +100,6 @@ class PlayState extends FlxState
 	{
 		super.update(elapsed);
 
-		ShotTools.hits = projectileCanvas;
 		if (FlxG.mouse.justPressed) {
 			var worldPos = FlxG.mouse.getWorldPosition();
 			var arm = player.arm;
@@ -120,7 +128,11 @@ class PlayState extends FlxState
 				v.scale(d);
 				tpos.x = gunPos.x + v.x;
 				tpos.y = gunPos.y + v.y;
+				gunShotSound.stop();
+				crushSound.play();
 			}
+			gunShotSound.stop();
+			gunShotSound.play();
 
 			projectileCanvas.addShot(gunPos.x, gunPos.y, tpos.x, tpos.y);
 		}

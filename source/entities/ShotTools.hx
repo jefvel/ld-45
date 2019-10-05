@@ -6,7 +6,6 @@ import flixel.FlxSprite;
 
 class ShotTools {
     static inline var EPS = 0.00000001;
-    public static var hits:entities.ProjectileCanvas;
     // Returns Math.POSITIVE_INFINITY if no hit
     static function lineVsLine(a1:FlxPoint, a2: FlxPoint, b1:FlxPoint, b2:FlxPoint, out: FlxPoint): Float {
         var s1_x, s1_y, s2_x, s2_y;
