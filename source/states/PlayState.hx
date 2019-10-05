@@ -74,8 +74,8 @@ class PlayState extends FlxState
 	{
 		super.create();
 
-		gunShotSound = FlxG.sound.load(AssetPaths.gunshot__wav);
-		crushSound = FlxG.sound.load(AssetPaths.death__wav);
+		gunShotSound = FlxG.sound.load(AssetPaths.gunshot__ogg);
+		crushSound = FlxG.sound.load(AssetPaths.death__ogg);
 
 
 		npcs = [];

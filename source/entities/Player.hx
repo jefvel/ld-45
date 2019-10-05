@@ -1,12 +1,10 @@
 package entities;
 
 import flixel.FlxSprite;
-import flixel.group.FlxGroup;
+import flixel.group.FlxSpriteGroup;
 import flixel.FlxG;
 
-class Player extends FlxGroup {
-    private var x: Float = 0;
-    private var y: Float = 0;
+class Player extends FlxSpriteGroup {
     private var destLambda: Float = 6;
 
     private var speed = 67;
@@ -28,8 +26,8 @@ class Player extends FlxGroup {
     override public function new() {
         super();
         horse = new Horse();
-        horse.mass = 100.0;
-        horse.drag.set(horseDrag, horseDrag);
+        mass = 100.0;
+        drag.set(horseDrag, horseDrag);
 
         leg1 = new FlxSprite(null, null, AssetPaths.horseleg__png);
         leg1.offset.set(5, 1);
@@ -83,51 +81,47 @@ class Player extends FlxGroup {
         
         horse.velocity.set(speed * dx, speed * dy);
         */
-        horse.y = Math.max(horse.y, GameData.SkyLimit);
+        y = Math.max(y, GameData.SkyLimit);
 
-        arm.x = horse.x;
-        arm.y = horse.y - 60;
+        if (Math.abs(this.velocity.x) > 2) {
+           flipX = this.velocity.x < 0;
+        }
 
-        body.x = horse.x;
-        body.y = horse.y - 25;
-        body.flipX = horse.flipX;
+        arm.x = x;
+        arm.y = y - 60;
 
-        var wobbliness = cast(horse.velocity, flixel.math.FlxVector).length;
+        body.x = x;
+        body.y = y - 25;
+        body.flipX = flipX;
 
+        var wobbliness = cast(velocity, flixel.math.FlxVector).length;
 
         arm.angle = armRotation / Math.PI * 180;
 
-        leg1.x = horse.x - 15;
-        leg1.y = horse.y + 3;
+        leg1.x = x - 15;
+        leg1.y = y + 3;
         leg1.angle = wobbGet(wobbliness, 2.0);
 
-
-        leg2.x = horse.x + 28;
-        leg2.y = horse.y + 3;
+        leg2.x = x + 28;
+        leg2.y = y + 3;
         leg2.angle = wobbGet(wobbliness, 4.0);
 
-        leg3.x = horse.x - 20;
-        leg3.y = horse.y + 5;
+        leg3.x = x - 20;
+        leg3.y = y + 5;
         leg3.angle = wobbGet(wobbliness, 1.2);
 
-        leg4.x = horse.x + 23;
-        leg4.y = horse.y + 8;
+        leg4.x = x + 23;
+        leg4.y = y + 8;
         leg4.angle = wobbGet(wobbliness, 5.0);
 
-        leg1.flipX = leg2.flipX = leg3.flipX = leg4.flipX = horse.flipX;
-
+        leg1.flipX = leg2.flipX = leg3.flipX = leg4.flipX = flipX;
 	}
 
     public function shoot(x:Float, y:Float) {
         var d = new flixel.math.FlxVector(arm.x - x, arm.y - y);
         d.normalize();
         d.scale(shotRecoil);
-        horse.velocity.add(d.x, d.y);
+        velocity.add(d.x, d.y);
         armRotation = Math.atan2(y - arm.y, x - arm.x);
-    }
-
-    public function setPosition(x:Float, y:Float) {
-        horse.x = x;
-        horse.y = y;
     }
 }
