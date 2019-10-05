@@ -13,8 +13,6 @@ import entities.Enemy;
 
 class PlayState extends FlxState
 {
-	
-
 	var ground:FlxSprite;
 	var sky:FlxSprite;
 

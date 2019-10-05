@@ -16,6 +16,8 @@ enum EnemyState {
 class Enemy extends FlxSprite {
     private var curState = None;
 
+    private var detectRadius: Float = 150;
+
     private var destX: Float = 0;
     private var destY: Float = 0;
     private var destLambda: Float = 5;
@@ -96,6 +98,10 @@ class Enemy extends FlxSprite {
             this.flipX = dx < 0;
         }
         this.velocity.set(speed * dx, speed * dy);
+    }
+
+    public function detectTarget():Bool {
+        return false;
     }
 
     function timerComplete(timer:FlxTimer) {
