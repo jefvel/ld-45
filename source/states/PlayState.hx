@@ -16,6 +16,7 @@ class PlayState extends FlxState
 	var player:Player;
 
 	var projectileCanvas: ProjectileCanvas;
+	var saloon: FlxSprite;
 
 	function spawn() {
 		player = new Player();
@@ -36,6 +37,14 @@ class PlayState extends FlxState
 		sky = new FlxSprite();
 		sky.makeGraphic(FlxG.width, GameData.SkyLimit, 0xff41ade9);
 		add(sky);
+
+		saloon = new FlxSprite();
+		saloon.x = 120;
+		saloon.y = GameData.SkyLimit - 240;
+		saloon.loadGraphic(AssetPaths.saloon__png);
+		add(saloon);
+
+
 		spawn();
 	}
 
