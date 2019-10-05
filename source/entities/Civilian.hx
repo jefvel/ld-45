@@ -40,7 +40,7 @@ class Civilian extends FlxSprite {
             case Resting:
             case Looting:
             case Dead:
-            default:
+            case Moving:
                 var dx = destX - x;
                 var dy = destY - y;
                 var d = Math.sqrt(dy * dy + dx * dx);
@@ -53,6 +53,8 @@ class Civilian extends FlxSprite {
                         move();
                     }
                 }
+            default:
+                move();
         }
 	}
 

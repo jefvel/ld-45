@@ -3,8 +3,11 @@ package entities;
 import flixel.math.FlxPoint;
 import flixel.math.FlxVector;
 import flixel.FlxSprite;
+import flixel.util.FlxSignal;
 
 class ShotTools {
+	public static var NpcHitSignal = new FlxTypedSignal<FlxSprite->Void>();
+    
     static inline var EPS = 0.00000001;
     public static var hits:entities.ProjectileCanvas;
     // Returns Math.POSITIVE_INFINITY if no hit

@@ -27,6 +27,7 @@ class PlayState extends FlxState
 		player = new Player();
 		player.setPosition(GameData.WorldWidth * 0.5, GameData.SkyLimit + 150);
 		add(player);
+		Enemy.shootableEntities.push(player.arm);
 
 		projectileCanvas = new ProjectileCanvas();
 		add(projectileCanvas);
@@ -44,11 +45,12 @@ class PlayState extends FlxState
 				civilian.setPosition(GameData.WorldWidth + civilian.width, yPos);
 			}
 			add(civilian);
-			civilian.move();
 			npcs.push(civilian);
+			Enemy.shootableEntities.push(civilian);
 		}
 		
-		// Spawn enemies
+		// Spawn enemies 
+		// Do last so it can collect shootable entities in static class member
 		for (i in 0...5) {
 			var enemy = new Enemy();
 			var yPos = (Math.random() * FlxG.height);
@@ -61,7 +63,7 @@ class PlayState extends FlxState
 				enemy.setPosition(GameData.WorldWidth + enemy.width, yPos);
 			}
 			add(enemy);
-			enemy.move();
+			enemy.setProjectileCanvas(projectileCanvas);
 			npcs.push(enemy);
 		}
 	}
@@ -69,6 +71,8 @@ class PlayState extends FlxState
 	override public function create():Void
 	{
 		super.create();
+		ShotTools.NpcHitSignal.add(npcHitCallback);
+
 		npcs = [];
 		ground = new FlxSprite();
 		ground.makeGraphic(FlxG.width, FlxG.height, 0xffe8b796);
@@ -115,14 +119,22 @@ class PlayState extends FlxState
 			}
 
 			if (target != null) {
-				remove(target);
-				npcs.remove(target);
+				ShotTools.NpcHitSignal.dispatch(target);
+				v.normalize();
 				v.scale(d);
 				tpos.x = gunPos.x + v.x;
 				tpos.y = gunPos.y + v.y;
 			}
 
 			projectileCanvas.addShot(gunPos.x, gunPos.y, tpos.x, tpos.y);
+		}
+	}
+
+	function npcHitCallback(target: FlxSprite) {
+		remove(target);
+		npcs.remove(target);
+		if (Enemy.shootableEntities.indexOf(target) > -1) {
+			Enemy.shootableEntities.remove(target);
 		}
 	}
 }
