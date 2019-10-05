@@ -4,6 +4,7 @@ import flixel.FlxG;
 import flixel.util.FlxTimer;
 import flixel.FlxSprite;
 import flixel.math.FlxPoint;
+import flixel.system.FlxSound;
 
 enum EnemyState {
     Moving;
@@ -22,8 +23,11 @@ class Enemy extends FlxSprite {
 	var projectileCanvas: ProjectileCanvas;
     var detectRadius: Float = 190;
     var shootTarget: FlxSprite;
+    var reloaded = true ;
     var reloadTime: Float = 1.7;
     var reloadTimer: FlxTimer;
+	var gunShotSound: FlxSound;
+	var crushSound: FlxSound;
 
     // Movement
     var destX: Float = 0;
@@ -37,6 +41,9 @@ class Enemy extends FlxSprite {
     override public function new() {
         super();
         loadGraphic(AssetPaths.enemy__png);
+
+		gunShotSound = FlxG.sound.load(AssetPaths.gunshot__wav);
+		crushSound = FlxG.sound.load(AssetPaths.death__wav);
      
         offset.set(14, 48);
         updateHitbox();
@@ -157,12 +164,13 @@ class Enemy extends FlxSprite {
     }
 
     private function shoot() {
+        this.velocity.set(0, 0);
+        
         if (this.curState != Shooting) {
-            this.velocity.set(0, 0);
             this.curState = Shooting;
         }
 
-        if (reloadTimer.timeLeft == 0) {
+        if (reloaded) {
             // Shoot
             var worldPos = shootTarget.getPosition();
             var v = new flixel.math.FlxVector(worldPos.x - x, worldPos.y - y);
@@ -184,15 +192,27 @@ class Enemy extends FlxSprite {
             }
 
             if (target != null) {
+		        Enemy.shootableEntities.remove(target);
+                shootTarget = null;
                 ShotTools.NpcHitSignal.dispatch(target);
                 v.scale(d);
                 tpos.x = gunPos.x + v.x;
                 tpos.y = gunPos.y + v.y;
-            }
+				gunShotSound.stop();
+			}
+                
+			gunShotSound.stop();
+			gunShotSound.play();
 
             projectileCanvas.addShot(gunPos.x, gunPos.y, tpos.x, tpos.y);
-            reloadTimer.start(reloadTime);
+
+            reloaded = false;
+            reloadTimer.start(reloadTime, reloadTimerComplete, 1);
         }
+    }
+
+    function reloadTimerComplete(timer:FlxTimer) {
+        reloaded = true;
     }
 
     function restTimerComplete(timer:FlxTimer) {

@@ -37,17 +37,17 @@ class PlayState extends FlxState
 		add(projectileCanvas);
 
 		// Spawn civilians
-		for (i in 0...0) {
+		for (i in 0...5) {
 			var civilian = new Civilian();
 			var yPos = (Math.random() * FlxG.height);
 			if (yPos < GameData.SkyLimit) {
 				yPos += GameData.SkyLimit;
 			}
-			if (Math.random() > 0.5) {
+			// if (Math.random() > 0.5) {
 				civilian.setPosition(0, yPos);
-			} else {
-				civilian.setPosition(GameData.WorldWidth + civilian.width, yPos);
-			}
+			// } else {
+			// 	civilian.setPosition(GameData.WorldWidth + civilian.width, yPos);
+			// }
 			add(civilian);
 			npcs.push(civilian);
 			Enemy.shootableEntities.push(civilian);
@@ -55,17 +55,17 @@ class PlayState extends FlxState
 		
 		// Spawn enemies 
 		// Do last so it can collect shootable entities in static class member
-		for (i in 0...1) {
+		for (i in 0...5) {
 			var enemy = new Enemy();
 			var yPos = (Math.random() * FlxG.height);
 			if (yPos < GameData.SkyLimit) {
 				yPos += GameData.SkyLimit;
 			}
-			if (Math.random() > 0.5) {
-				enemy.setPosition(0, yPos);
-			} else {
+			// if (Math.random() > 0.5) {
+			// 	enemy.setPosition(0, yPos);
+			// } else {
 				enemy.setPosition(GameData.WorldWidth + enemy.width, yPos);
-			}
+			// }
 			add(enemy);
 			enemy.setProjectileCanvas(projectileCanvas);
 			npcs.push(enemy);
@@ -131,7 +131,6 @@ class PlayState extends FlxState
 				tpos.x = gunPos.x + v.x;
 				tpos.y = gunPos.y + v.y;
 				gunShotSound.stop();
-				crushSound.play();
 			}
 			gunShotSound.stop();
 			gunShotSound.play();
@@ -141,10 +140,8 @@ class PlayState extends FlxState
 	}
 
 	function npcHitCallback(target: FlxSprite) {
+		crushSound.play();
 		remove(target);
 		npcs.remove(target);
-		if (Enemy.shootableEntities.indexOf(target) > -1) {
-			Enemy.shootableEntities.remove(target);
-		}
 	}
 }
