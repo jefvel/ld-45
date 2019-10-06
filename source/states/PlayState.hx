@@ -478,17 +478,19 @@ class PlayState extends FlxState
 
 			// Gore
 			crushSound.play();
-			var gore = new BloodExplosion(
-				target.x + target.offset.x,
-				target.y + target.offset.y
-			);
-			gore.setSize(
-				target.width * 0.2,
-				target.height * 0.2
-			);
-			gore.start(true);
-			add(gore);
-			bloodCanvas.addBloodsplatter(target.x, target.y);
+			if (target != null && target.offset != null) {
+				var gore = new BloodExplosion(
+					target.x + target.offset.x,
+					target.y + target.offset.y
+				);
+				gore.setSize(
+					target.width * 0.2,
+					target.height * 0.2
+				);
+				gore.start(true);
+				add(gore);
+				bloodCanvas.addBloodsplatter(target.x, target.y);
+			}
 		}
 	}
 
