@@ -102,6 +102,16 @@ class PlayState extends FlxState
 	inline static var RockAmount = 60;
 	function createRocksAndStuff() {
 		rocks = new FlxGroup();
+		var dx = Std.int(Math.ceil(GameData.WorldWidth / 64));
+		for (i in 0...dx) {
+			var r = new FlxSprite(
+				i * 64,
+				GameData.SkyLimit - 6
+			);
+			r.loadGraphic(AssetPaths.groundedges__png, true, 64, 8);
+			r.animation.randomFrame();
+			rocks.add(r);
+		}
 		for (i in 0...RockAmount) {
 			var r = new FlxSprite(
 				Math.random() * GameData.WorldWidth, 
