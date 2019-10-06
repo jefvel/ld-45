@@ -32,6 +32,7 @@ class PlayState extends FlxState
 	var crushSound: FlxSound;
 	var shadows: flixel.group.FlxGroup;
 
+	var gibGroup: FlxGroup;
 	var peopleGroup: flixel.group.FlxTypedGroup<FlxSprite>;
 
 	function spawn() {
@@ -101,10 +102,10 @@ class PlayState extends FlxState
 		}
 	}
 
-	var bgDetails: FlxGroup;
+	var bgDetails: flixel.group.FlxTypedGroup<FlxSprite>;
 	inline static var RockAmount = 60;
 	function createRocksAndStuff() {
-		bgDetails = new FlxGroup();
+		bgDetails = new flixel.group.FlxTypedGroup<FlxSprite>();
 
 		// Clouds
 		for (i in 0...20) {
@@ -141,6 +142,8 @@ class PlayState extends FlxState
 			bgDetails.add(r);
 		}
 		add(bgDetails);
+
+		bgDetails.sort(FlxSort.byY, FlxSort.ASCENDING);
 	}
 
 	override public function create():Void
@@ -176,6 +179,9 @@ class PlayState extends FlxState
 		saloon.y = GameData.SkyLimit - 220;
 		saloon.loadGraphic(AssetPaths.saloon__png);
 		add(saloon);
+
+		gibGroup = new FlxGroup();
+		add(gibGroup);
 
 		peopleGroup = new flixel.group.FlxTypedGroup<FlxSprite>();
 		add(peopleGroup);
@@ -233,7 +239,7 @@ class PlayState extends FlxState
 			case Player:
 			case Enemy: 
 				target.kill();
-				trace("Shot enemy!");
+				gibGroup.add(new entities.Gib(Enemy, target.x, target.y));
 			case Citizen:
 				target.kill();
 		}
