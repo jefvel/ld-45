@@ -13,10 +13,6 @@ class MainMenuState extends FlxState
 	public var infoText: FlxText;
 	public var playBtn: FlxButton;
 
-	static private function onClickPlay() {
-		FlxG.switchState(new PlayState());
-	}
-
 	override public function create():Void
 	{
 		titleText = new flixel.text.FlxText(
@@ -58,5 +54,9 @@ class MainMenuState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+	}
+	
+	static private function onClickPlay() {
+		FlxG.switchState(new PlayState());
 	}
 }

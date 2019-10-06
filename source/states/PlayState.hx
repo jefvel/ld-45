@@ -1,6 +1,10 @@
 package states;
 
+import js.html.ScreenOrientation;
+import flixel.text.FlxText;
 import GameData;
+import Score;
+import states.MainMenuState;
 import flixel.FlxSprite;
 import flixel.FlxG;
 import flixel.group.FlxGroup;
@@ -18,6 +22,9 @@ import entities.Enemy;
 
 class PlayState extends FlxState
 {
+	var score:Score;
+	var scoreDisplay:FlxText;
+
 	var ground:FlxSprite;
 	var sky:FlxSprite;
 
@@ -177,6 +184,7 @@ class PlayState extends FlxState
 	override public function create():Void
 	{
 		super.create();
+
 		ShotTools.NpcHitSignal.add(npcHitCallback);
 		BloodExplosion.BloodHitGroundSignal.add(bloodHitGroundSignal);
 
@@ -213,6 +221,19 @@ class PlayState extends FlxState
 		gibGroup = new FlxGroup();
 		add(gibGroup);
 
+		score = new Score();
+		scoreDisplay = new FlxText(
+			FlxG.width * 0.05,
+			FlxG.height * 0.05,
+			0,
+			"0",
+			32
+		);
+		scoreDisplay.scrollFactor.set(0, 0);
+		scoreDisplay.color = 0xFF9E2835;
+		add(scoreDisplay);
+		score.toggleTimeScore();
+
 		spawn();
 	}
 
@@ -220,13 +241,14 @@ class PlayState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+
 		timeUntilNextWave -= elapsed;
 		if (timeUntilNextWave < 0) {
 			spawnEnemyWave();
 		}
 
 		reloadTime -= elapsed;
-
+		
 		var mouseWorldPos = FlxG.mouse.getWorldPosition();
 
 		if (FlxG.mouse.justPressedMiddle) {
@@ -272,6 +294,10 @@ class PlayState extends FlxState
 			add(mf);
 		}
 		peopleGroup.sort(FlxSort.byY, FlxSort.ASCENDING);
+
+		// Update score
+		scoreDisplay.text = "" + Score.PlayerScore;
+		scoreDisplay.color = Score.PlayerScore < 0 ? 0xFF9E2835 : 0xFF193C3E;
 	}
 
 	function npcHitCallback(target: entities.Person) {
@@ -282,9 +308,13 @@ class PlayState extends FlxState
 				target.hurt(GameData.GunDamage);
 				if (!target.alive) {
 					gibGroup.add(new entities.Gib(Enemy, target.x, target.y));
+					Score.addEnemyKill();
 				}
 			case Citizen:
 				target.hurt(GameData.GunDamage);
+				if (!target.alive) {
+					Score.addCivilianKill();
+				}
 		}
 
 		if (!target.alive) {
@@ -308,6 +338,15 @@ class PlayState extends FlxState
 			add(gore);
 			bloodCanvas.addBloodsplatter(target.x, target.y);
 		}
+	}
+
+	function exitGame() {
+		score.toggleTimeScore();
+		if (Score.PlayerScore > GameData.HighScore)
+			GameData.HighScore = Score.PlayerScore;
+		Score.PlayerScore = 0;
+
+		FlxG.switchState(new MainMenuState());
 	}
 
 	function bloodHitGroundSignal(loc: FlxPoint) {
