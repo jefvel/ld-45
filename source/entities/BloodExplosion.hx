@@ -19,7 +19,7 @@ class BloodExplosion extends FlxEmitter {
     static var maxParticleScale = 0.8;
     static var gravity = 1000.0;
     static var initialSpeed = 500.0;
-    static var minLifespan = 1.2;
+    static var minLifespan = 1.0;
     
     public var particleTimer: FlxTimer;
     public var goreParticles: Array<FlxParticle>;

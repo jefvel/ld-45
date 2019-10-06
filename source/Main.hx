@@ -10,7 +10,7 @@ import states.PlayState;
 
 class Main extends Sprite
 {
-	var initialState:Class<FlxState> = states.PlayState; // The FlxState the game starts with.
+	var initialState:Class<FlxState> = states.MainMenuState; // The FlxState the game starts with.
 	var zoom:Float = 2; // If -1, zoom is automatically calculated to fit the window dimensions.
 	var framerate:Int = 60; // How many frames per second the game should run at.
 	var skipSplash:Bool = true; // Whether to skip the flixel splash screen that appears in release mode.
