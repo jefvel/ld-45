@@ -104,7 +104,7 @@ class Enemy extends FlxSprite {
 
         var yPos = Math.random() * FlxG.height;
         if (yPos < GameData.SkyLimit) {
-            yPos += GameData.SkyLimit;
+            yPos = GameData.SkyLimit;
         }
         var xPos = Math.random() * GameData.WorldWidth - width;
         if (xPos < 0) {
@@ -165,6 +165,9 @@ class Enemy extends FlxSprite {
 
     private function shoot() {
         this.velocity.set(0, 0);
+        if (this.shootTarget == null) {
+            return;
+        }
         
         if (this.curState != Shooting) {
             this.curState = Shooting;

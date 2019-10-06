@@ -80,7 +80,6 @@ class PlayState extends FlxState
 		gunShotSound = FlxG.sound.load(AssetPaths.gunshot__ogg);
 		crushSound = FlxG.sound.load(AssetPaths.death__ogg);
 
-
 		npcs = [];
 		ground = new FlxSprite();
 		ground.makeGraphic(FlxG.width, FlxG.height, 0xffe8b796);
