@@ -18,5 +18,5 @@ class GameData {
     public static inline var EnemyAimTime = 1.6;
     public static inline var EnemyHurtRecoveryTime = 0.2;
 
-    public static var HighScore = 0;
+    public static var VictoryBoundaryX = 480 * 1.5;
 }
