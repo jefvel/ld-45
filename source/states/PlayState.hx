@@ -351,12 +351,12 @@ class PlayState extends FlxState
 		victoryGroup = new FlxSpriteGroup();
 		victoryGroup.scrollFactor.set(0, 0);
 
-		victoryText = new FlxText(0, FlxG.height * 0.3, FlxG.width, "V I C T O R Y", 64);
+		victoryText = new FlxText(0, FlxG.height * 0.3, FlxG.width, "V I C T O R Y", 52);
 		victoryText.alignment = FlxTextAlign.CENTER;
-		victoryText.color = 0xFF9E2835;
+		victoryText.color = 0xFF265C42;
 		victoryGroup.add(victoryText);
 		
-		continueButton = new FlxButton(FlxG.width * 0.45, FlxG.height * 0.8, "Exit", exitGame);
+		continueButton = new FlxButton(FlxG.width * 0.4, FlxG.height * 0.8, "Exit", exitGame);
 		continueButton.setSize(Math.floor(FlxG.width * 0.2), Math.floor(FlxG.height * 0.1));
 		continueButton.setGraphicSize(cast continueButton.width, cast continueButton.height);
 		victoryGroup.add(continueButton);
@@ -473,8 +473,10 @@ class PlayState extends FlxState
 	}
 
 	function displayDeathScreen() {
-		scoreDisplay.visible = !scoreDisplay.visible;
-		add(deathGroup);
+		if (!victoryAchieved) {
+			scoreDisplay.visible = !scoreDisplay.visible;
+			add(deathGroup);
+		}
 	}
 
 	function displayVictoryScreen() {
@@ -483,34 +485,37 @@ class PlayState extends FlxState
 		var newHighScoreSet = Score.PlayerScore > Score.HighScore;
 		if (newHighScoreSet) {
 			var newHighScoreSetDisplay = new FlxText(
-				FlxG.width * 0.35,
 				0,
+				FlxG.height * 0.5,
 				FlxG.width,
 				"You set a new highscore!",
 				24
 			);
 			newHighScoreSetDisplay.alignment = FlxTextAlign.CENTER;
+			newHighScoreSetDisplay.color = 0xFF164C32;
 			victoryGroup.add(newHighScoreSetDisplay);
 		}
 
 		var oldHighScoreDisplay = new FlxText(
-			FlxG.width * 0.4,
-			0.45,
+			0,
+			FlxG.height * 0.6,
 			FlxG.width,
-			"Current highscore:" + Score.HighScore,
+			"Current highscore: " + Score.HighScore,
 			16
 		);
 		oldHighScoreDisplay.alignment = FlxTextAlign.CENTER;
+		oldHighScoreDisplay.color = 0xFF164C32;
 		victoryGroup.add(oldHighScoreDisplay);
 
 		var yourScoreDisplay = new FlxText(
-			FlxG.width * 0.4,
-			0.45,
+			0,
+			FlxG.height * 0.7,
 			FlxG.width,
-			newHighScoreSet ? "New highscore:" : "Your score:" + Score.HighScore,
+			newHighScoreSet ? "New highscore: " + Score.PlayerScore : "Your score: " + Score.PlayerScore,
 			16
 		);
 		yourScoreDisplay.alignment = FlxTextAlign.CENTER;
+		yourScoreDisplay.color = 0xFF164C32;
 		victoryGroup.add(yourScoreDisplay);
 
 		add(victoryGroup);
