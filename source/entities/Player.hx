@@ -137,12 +137,12 @@ class Player extends FlxSpriteGroup {
 	}
 
     public function shoot(x:Float, y:Float) {
-        var d = new flixel.math.FlxVector(arm.x - x, arm.y - y);
+        var d = flixel.math.FlxVector.get(arm.x - x, arm.y - y);
         d.normalize();
         d.scale(shotRecoil);
         velocity.add(d.x, d.y);
         armRotation = Math.atan2(y - arm.y, x - arm.x);
-        armRotationShift = Math.random() * 20 - 10;
+        armRotationShift = (Math.random() * 20 - 10) * 2;
         arm.angle = armRotation / Math.PI * 180 + armRotationShift;
     }
 }

@@ -34,14 +34,13 @@ class Enemy extends entities.Person {
 	var projectileCanvas: ProjectileCanvas;
     var shootTarget: entities.Person;
     var reloaded = true ;
-    var reloadTime: Float = 1.7;
     var reloadTimer: FlxTimer;
 	var gunShotSound: FlxSound;
 
     // Movement
     var destX: Float = 0;
     var destY: Float = 0;
-    var destLambda: Float = 5;
+    var destLambdaSquared: Float = 5 * 5;
     var speed: Float = 50;
     var shotRecoil = 120.0;
     var enemyDrag = 1.0;
@@ -115,8 +114,8 @@ class Enemy extends entities.Person {
                     );
                     var dx = destX - x;
                     var dy = destY - y;
-                    var d = Math.sqrt(dy * dy + dx * dx);
-                    if (d < destLambda) {
+                    var d = (dy * dy + dx * dx);
+                    if (d < destLambdaSquared) {
                         this.velocity.set(0, 0);
                         // Half chance to rest or keep moving
                         if (Math.random() > 0.5) {
@@ -173,8 +172,8 @@ class Enemy extends entities.Person {
         // Calculate speed
         var dx = x - this.x;
         var dy = y - this.y;
-        var d = Math.sqrt(dy * dy + dx * dx);
-        if (d < destLambda) {
+        var d = (dy * dy + dx * dx);
+        if (d < destLambdaSquared) {
             dx = dy = 0;
         } else {
             dx /= d;
@@ -202,8 +201,8 @@ class Enemy extends entities.Person {
         if (entity != null) {
             var dx = entity.x - this.x;
             var dy = entity.y - this.y;
-            var d = Math.sqrt(dy * dy + dx * dx);
-            return d < GameData.EnemyGunRange;
+            var d = (dy * dy + dx * dx);
+            return d < GameData.EnemyGunRange * GameData.EnemyGunRange;
         }
         return false;
     }
@@ -238,14 +237,14 @@ class Enemy extends entities.Person {
         if (reloaded) {
             // Shoot
             //var worldPos = shootTarget.getPosition();
-            var worldPos = new FlxPoint(aimPosX, aimPosY);
-            var gunPos = new FlxPoint(x + (flipX ? 32 - gunPosX : gunPosX), y + gunPosY);
-            var v = new flixel.math.FlxVector(worldPos.x - x, worldPos.y - y);
+            var worldPos = FlxPoint.get(aimPosX, aimPosY);
+            var gunPos = FlxPoint.get(x + (flipX ? 32 - gunPosX : gunPosX), y + gunPosY);
+            var v = flixel.math.FlxVector.get(worldPos.x - x, worldPos.y - y);
             v.normalize();
             v.scale(500);
 
 
-            var tpos = new FlxPoint(x + v.x, y + v.y);
+            var tpos = FlxPoint.get(x + v.x, y + v.y);
 
             var target: entities.Person = null;
             var d = Math.POSITIVE_INFINITY;
@@ -270,7 +269,7 @@ class Enemy extends entities.Person {
             projectileCanvas.addShot(gunPos.x, gunPos.y, tpos.x, tpos.y);
 
             reloaded = false;
-            reloadTimer.start(reloadTime, reloadTimerComplete, 1);
+            reloadTimer.start(GameData.EnemyReloadTime, reloadTimerComplete, 1);
             
             shootTarget = null;
         }

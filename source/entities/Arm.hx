@@ -16,12 +16,12 @@ class Arm extends FlxSprite {
 
     }
 
-    private static var zeroPoint = new FlxPoint();
+    private static var zeroPoint = FlxPoint.get();
     public function getMuzzleWorldPos() {
         var r = angle / 180.0 * Math.PI;
-        var p = new FlxPoint(x + origin.x, y + origin.y);
+        var p = FlxPoint.get(x + origin.x, y + origin.y);
 
-        var d = new flixel.math.FlxVector(muzzlePos.x - origin.x, muzzlePos.y - origin.y);
+        var d = flixel.math.FlxVector.get(muzzlePos.x - origin.x, muzzlePos.y - origin.y);
         d.rotate(zeroPoint, r / Math.PI * 180);
 
         p.x += d.x;
