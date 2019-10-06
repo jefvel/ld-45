@@ -1,6 +1,15 @@
 package states;
 
+import openfl.display.Sprite;
+import flixel.group.FlxSpriteGroup;
+import flixel.ui.FlxButton;
+import entities.Person;
+import js.html.ScreenOrientation;
+import flixel.text.FlxText;
+import flixel.util.FlxSignal;
 import GameData;
+import Score;
+import states.MainMenuState;
 import flixel.FlxSprite;
 import flixel.FlxG;
 import flixel.group.FlxGroup;
@@ -16,9 +25,13 @@ import entities.Civilian;
 import entities.ShotTools;
 import entities.Enemy;
 import entities.Barrel;
+import entities.Shadow;
 
 class PlayState extends FlxState
 {
+	var score:Score;
+	var scoreDisplay:FlxText;
+
 	var ground:FlxSprite;
 	var sky:FlxSprite;
 
@@ -36,7 +49,7 @@ class PlayState extends FlxState
 	var pickupSound: FlxSound;
 	var bloodSplashSound: FlxSound;
 
-	var shadows: flixel.group.FlxGroup;
+	var shadows: flixel.group.FlxTypedGroup<Shadow>;
 
 	var gibGroup: FlxGroup;
 	var peopleGroup: flixel.group.FlxTypedGroup<FlxSprite>;
@@ -57,52 +70,11 @@ class PlayState extends FlxState
 	var collectedBarrelCount = 0;
 	var barrelsUntilNewCiv = 0;
 
-	override public function create():Void
-	{
-		super.create();
-		ShotTools.NpcHitSignal.add(npcHitCallback);
-		BloodExplosion.BloodHitGroundSignal.add(bloodHitGroundSignal);
-
-		gunShotSound = FlxG.sound.load(AssetPaths.gunshot__ogg);
-		crushSound = FlxG.sound.load(AssetPaths.death__ogg);
-
-		impactSound = FlxG.sound.load(AssetPaths.impact__ogg);
-		bloodSplashSound = FlxG.sound.load(AssetPaths.splash__ogg);
-
-		pickupSound = FlxG.sound.load(AssetPaths.pickup__ogg);
-
-		npcs = [];
-		enemies = [];
-
-		barrelsUntilNewCiv = GameData.CivCost;
-		
-		sky = new FlxSprite();
-		sky.makeGraphic(FlxG.width, GameData.SkyLimit, 0xff41ade9);
-		add(sky);
-		sky.scrollFactor.set(0, 1.0);
-
-		ground = new FlxSprite();
-		ground.makeGraphic(FlxG.width, GameData.GroundHeight, 0xffe8b796);
-		ground.y = GameData.SkyLimit;
-		add(ground);
-		ground.scrollFactor.set(0, 1.0);
-
-		createRocksAndStuff();
-		
-		shadows = new flixel.group.FlxGroup();
-		add(shadows);
-
-		saloon = new entities.Saloon();
-		add(saloon);
-
-		bloodCanvas = new BloodCanvas();
-		add(bloodCanvas);
-
-		gibGroup = new FlxGroup();
-		add(gibGroup);
-
-		spawn();
-	}
+	// Death UI
+	var deathGroup: FlxSpriteGroup;
+	var deathText: FlxText;
+	var retryButton: FlxButton;
+	var mainMenuButton: FlxButton;
 
 	function spawn() {
 		FlxG.camera.setScrollBoundsRect(0, 0, GameData.WorldWidth, FlxG.stage.stageHeight, true);
@@ -123,7 +95,7 @@ class PlayState extends FlxState
 		peopleGroup.add(player);
 		camera.follow(player);
 		camera.targetOffset.set(-32, -168);
-		Enemy.shootableEntities.push(player.body);
+		entities.Enemy.shootableEntities.push(player.body);
 
 		// Spawn civilians
 		for (i in 0...5) {
@@ -221,7 +193,7 @@ class PlayState extends FlxState
 		peopleGroup.add(civ);
 		npcs.push(civ);
 		attachShadow(AssetPaths.shadow_small__png, civ, 0, 53);
-		Enemy.shootableEntities.push(civ);
+		entities.Enemy.shootableEntities.push(civ);
 	}
 
 	function attachShadow(shadowAsset: String, target: FlxSprite, offsetX: Float, offsetY: Float) {
@@ -230,8 +202,8 @@ class PlayState extends FlxState
 	}
 
 	function removeShadow(target: FlxSprite) {
-		for (e in shadows.iterator()) {
-			if (cast(e, entities.Shadow).target == target) {
+		for (e in shadows) {
+			if (e.target == target) {
 				shadows.remove(e);
 				return;
 			}
@@ -287,6 +259,89 @@ class PlayState extends FlxState
 		spawnCitizen(saloon.door.x, saloon.door.y + 30);
 	}
 
+	override public function create():Void
+	{
+		super.create();
+
+		ShotTools.NpcHitSignal = new FlxTypedSignal<entities.Person->Void>();
+		ShotTools.NpcHitSignal.add(npcHitCallback);
+
+		BloodExplosion.BloodHitGroundSignal = new FlxTypedSignal<FlxPoint->Void>();
+		BloodExplosion.BloodHitGroundSignal.add(bloodHitGroundSignal);
+
+		gunShotSound = FlxG.sound.load(AssetPaths.gunshot__ogg);
+		crushSound = FlxG.sound.load(AssetPaths.death__ogg);
+
+		impactSound = FlxG.sound.load(AssetPaths.impact__ogg);
+		bloodSplashSound = FlxG.sound.load(AssetPaths.splash__ogg);
+
+		pickupSound = FlxG.sound.load(AssetPaths.pickup__ogg);
+
+		npcs = [];
+		enemies = [];
+
+		barrelsUntilNewCiv = GameData.CivCost;
+		
+		sky = new FlxSprite();
+		sky.makeGraphic(FlxG.width, GameData.SkyLimit, 0xff41ade9);
+		add(sky);
+		sky.scrollFactor.set(0, 1.0);
+
+		ground = new FlxSprite();
+		ground.makeGraphic(FlxG.width, GameData.GroundHeight, 0xffe8b796);
+		ground.y = GameData.SkyLimit;
+		add(ground);
+		ground.scrollFactor.set(0, 1.0);
+
+		createRocksAndStuff();
+		
+		shadows = new flixel.group.FlxTypedGroup<Shadow>();
+		add(shadows);
+
+		saloon = new entities.Saloon();
+		add(saloon);
+
+		bloodCanvas = new BloodCanvas();
+		add(bloodCanvas);
+
+		gibGroup = new FlxGroup();
+		add(gibGroup);
+
+		score = new Score();
+		scoreDisplay = new FlxText(
+			FlxG.width * 0.05,
+			FlxG.height * 0.05,
+			0,
+			"0",
+			32
+		);
+		scoreDisplay.scrollFactor.set(0, 0);
+		scoreDisplay.color = 0xFF9E2835;
+		add(scoreDisplay);
+		score.toggleTimeScore();
+
+		// Death UI
+		deathGroup = new FlxSpriteGroup();
+		deathGroup.scrollFactor.set(0, 0);
+
+		deathText = new FlxText(0, FlxG.height * 0.3, FlxG.width, "D E A D", 64);
+		deathText.alignment = FlxTextAlign.CENTER;
+		deathText.color = 0xFF9E2835;
+		deathGroup.add(deathText);
+
+		retryButton = new FlxButton(FlxG.width * 0.3, FlxG.height * 0.5, "Retry", restartGame);
+		retryButton.setSize(Math.floor(FlxG.width * 0.2), Math.floor(FlxG.height * 0.1));
+		retryButton.setGraphicSize(cast retryButton.width, cast retryButton.height);
+		deathGroup.add(retryButton);
+		
+		mainMenuButton = new FlxButton(FlxG.width * 0.55, FlxG.height * 0.5, "Exit", exitGame);
+		mainMenuButton.setSize(Math.floor(FlxG.width * 0.2), Math.floor(FlxG.height * 0.1));
+		mainMenuButton.setGraphicSize(cast mainMenuButton.width, cast mainMenuButton.height);
+		deathGroup.add(mainMenuButton);
+
+		spawn();
+	}
+
 	function barrelDeposited(b: Barrel) {
 		collectedBarrelCount++;
 		barrelsUntilNewCiv --;
@@ -304,13 +359,16 @@ class PlayState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		if (!player.body.alive)
+			return;
+
 		timeUntilNextWave -= elapsed;
 		if (timeUntilNextWave < 0) {
 			spawnEnemyWave();
 		}
 
 		reloadTime -= elapsed;
-
+		
 		var mouseWorldPos = FlxG.mouse.getWorldPosition();
 
 		if (FlxG.mouse.justPressedMiddle) {
@@ -377,21 +435,38 @@ class PlayState extends FlxState
 		}
 
 		peopleGroup.sort(FlxSort.byY, FlxSort.ASCENDING);
+
+		// Update score
+		scoreDisplay.text = "" + Score.PlayerScore;
+		scoreDisplay.color = Score.PlayerScore < 0 ? 0xFF9E2835 : 0xFF193C3E;
+	}
+
+	function displayDeathScreen() {
+		scoreDisplay.visible = !scoreDisplay.visible;
+		add(deathGroup);
 	}
 
 	function npcHitCallback(target: entities.Person) {
 		switch (target.personType) {
 			case Player:
+				target.hurt(GameData.GunDamage);
+				if (!target.alive) {
+					displayDeathScreen();
+				}
 			case Enemy: 
 				impactSound.play();
 				target.hurt(GameData.GunDamage);
 				if (!target.alive) {
 					gibGroup.add(new entities.Gib(Enemy, target.x, target.y));
+					Score.addEnemyKill();
 					spawnBarrel(target.x, target.y + 60);
 					enemies.remove(target);
 				}
 			case Citizen:
 				target.hurt(GameData.GunDamage);
+				if (!target.alive) {
+					Score.addCivilianKill();
+				}
 		}
 
 		if (!target.alive) {
@@ -399,7 +474,7 @@ class PlayState extends FlxState
 			peopleGroup.remove(target, true);
 			npcs.remove(target);
 			removeShadow(target);
-			Enemy.shootableEntities.remove(target);
+			entities.Enemy.shootableEntities.remove(target);
 
 			// Gore
 			crushSound.play();
@@ -415,6 +490,24 @@ class PlayState extends FlxState
 			add(gore);
 			bloodCanvas.addBloodsplatter(target.x, target.y);
 		}
+	}
+
+	function restartGame() {
+		score.toggleTimeScore();
+		if (Score.PlayerScore > GameData.HighScore)
+			GameData.HighScore = Score.PlayerScore;
+		Score.PlayerScore = 0;
+
+		FlxG.resetState();
+	}
+
+	function exitGame() {
+		score.toggleTimeScore();
+		if (Score.PlayerScore > GameData.HighScore)
+			GameData.HighScore = Score.PlayerScore;
+		Score.PlayerScore = 0;
+
+		FlxG.switchState(new MainMenuState());
 	}
 
 	function bloodHitGroundSignal(loc: FlxPoint) {

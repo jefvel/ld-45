@@ -13,10 +13,6 @@ class MainMenuState extends FlxState
 	public var infoText: FlxText;
 	public var playBtn: FlxButton;
 
-	static private function onClickPlay() {
-		FlxG.switchState(new PlayState());
-	}
-
 	override public function create():Void
 	{
 		titleText = new flixel.text.FlxText(
@@ -48,6 +44,10 @@ class MainMenuState extends FlxState
 		playBtn = new FlxButton(FlxG.width * 0.4, FlxG.height * 0.8, "Get some!", onClickPlay);
 		playBtn.setSize(Math.floor(FlxG.width * 0.3), Math.floor(FlxG.height * 0.1));
 		playBtn.setGraphicSize(cast playBtn.width, cast playBtn.height);
+		
+		playBtn = new FlxButton(FlxG.width * 0.4, FlxG.height * 0.8, "Get some!", onClickPlay);
+		playBtn.setSize(Math.floor(FlxG.width * 0.3), Math.floor(FlxG.height * 0.1));
+		playBtn.setGraphicSize(cast playBtn.width, cast playBtn.height);
 
 		super.create();
 		add(titleText);
@@ -58,5 +58,9 @@ class MainMenuState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+	}
+	
+	static private function onClickPlay() {
+		FlxG.switchState(new PlayState());
 	}
 }

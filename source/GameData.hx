@@ -23,4 +23,6 @@ class GameData {
     public static inline var CivCost = 4;
     public static inline var CivReloadTime = 3.0;
     public static inline var CivGunRange = 250.0;
+
+    public static var HighScore = 0;
 }
