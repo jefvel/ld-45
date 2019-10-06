@@ -91,9 +91,6 @@ class PlayState extends FlxState
 		}
 		
 		spawnEnemyWave();
-
-		var bar = spawnBarrel(300, 300);
-		collectBarrel(bar);
 	}
 
 	function depositBarrels() {
