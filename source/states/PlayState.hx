@@ -30,10 +30,16 @@ class PlayState extends FlxState
 
 	var gunShotSound: FlxSound;
 	var crushSound: FlxSound;
+	var impactSound: FlxSound;
+
 	var shadows: flixel.group.FlxGroup;
 
 	var gibGroup: FlxGroup;
 	var peopleGroup: flixel.group.FlxTypedGroup<FlxSprite>;
+
+	var reloadTime = 0.0;
+
+	var timeUntilNextWave = 0.0;
 
 	function spawn() {
 		FlxG.camera.setScrollBoundsRect(0, 0, GameData.WorldWidth, FlxG.stage.stageHeight, true);
@@ -72,24 +78,40 @@ class PlayState extends FlxState
 			Enemy.shootableEntities.push(civilian);
 		}
 		
+		spawnEnemyWave();
+	}
+
+	function getXFarFromPlayer() {
+		var x = Math.random() * GameData.WorldWidth;
+		var playerX = player.x;
+		while (Math.abs(x - playerX) < 500){
+			x = Math.random() * GameData.WorldWidth;
+		}
+
+		return x;
+	}
+
+	function spawnEnemyWave() {
 		// Spawn enemies 
 		// Do last so it can collect shootable entities in static class member
 		for (i in 0...5) {
-			var enemy = new Enemy();
 			var yPos = (Math.random() * FlxG.height);
 			if (yPos < GameData.SkyLimit) {
 				yPos += GameData.SkyLimit;
 			}
-			// if (Math.random() > 0.5) {
-			// 	enemy.setPosition(0, yPos);
-			// } else {
-				enemy.setPosition(GameData.WorldWidth + enemy.width, yPos);
-			// }
-			peopleGroup.add(enemy);
-			enemy.setProjectileCanvas(projectileCanvas);
-			npcs.push(enemy);
-			attachShadow(AssetPaths.shadow_small__png, enemy, 0, 53);
+			spawnEnemy(getXFarFromPlayer(), yPos);
 		}
+
+		timeUntilNextWave = GameData.EnemySpawnTime;
+	}
+
+	public function spawnEnemy(x, y) {
+		var enemy = new Enemy();
+		enemy.setPosition(x, y);
+		peopleGroup.add(enemy);
+		enemy.setProjectileCanvas(projectileCanvas);
+		npcs.push(enemy);
+		attachShadow(AssetPaths.shadow_small__png, enemy, 0, 53);
 	}
 
 	function attachShadow(shadowAsset: String, target: FlxSprite, offsetX: Float, offsetY: Float) {
@@ -157,6 +179,7 @@ class PlayState extends FlxState
 
 		gunShotSound = FlxG.sound.load(AssetPaths.gunshot__ogg);
 		crushSound = FlxG.sound.load(AssetPaths.death__ogg);
+		impactSound = FlxG.sound.load(AssetPaths.impact__ogg);
 
 		npcs = [];
 		
@@ -188,17 +211,30 @@ class PlayState extends FlxState
 		spawn();
 	}
 
+
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		timeUntilNextWave -= elapsed;
+		if (timeUntilNextWave < 0) {
+			spawnEnemyWave();
+		}
 
-		if (FlxG.mouse.justPressed) {
-			var worldPos = FlxG.mouse.getWorldPosition();
+		reloadTime -= elapsed;
+
+		var mouseWorldPos = FlxG.mouse.getWorldPosition();
+
+		if (FlxG.mouse.justPressedMiddle) {
+			spawnEnemy(mouseWorldPos.x, mouseWorldPos.y);
+		}
+
+		if (FlxG.mouse.pressed && reloadTime <= 0) {
+			reloadTime = GameData.ReloadTime;
 			var arm = player.arm;
-			player.shoot(worldPos.x, worldPos.y);
+			player.shoot(mouseWorldPos.x, mouseWorldPos.y);
 			var gunPos = arm.getMuzzleWorldPos();
 			
-			var v = new flixel.math.FlxVector(worldPos.x - arm.x, worldPos.y - arm.y);
+			var v = new flixel.math.FlxVector(mouseWorldPos.x - arm.x, mouseWorldPos.y - arm.y);
 			v.normalize();
 			v.scale(500);
 
@@ -219,7 +255,6 @@ class PlayState extends FlxState
 				v.scale(d);
 				tpos.x = gunPos.x + v.x;
 				tpos.y = gunPos.y + v.y;
-				gunShotSound.stop();
 			}
 			gunShotSound.stop();
 			gunShotSound.play();
@@ -235,21 +270,26 @@ class PlayState extends FlxState
 	}
 
 	function npcHitCallback(target: entities.Person) {
-		crushSound.play();
 		// bloodCanvas.addBloodsplatter(target.x, target.y);
-		peopleGroup.remove(target, true);
 
 		switch (target.personType) {
 			case Player:
 			case Enemy: 
-				target.kill();
-				gibGroup.add(new entities.Gib(Enemy, target.x, target.y));
+				impactSound.play();
+				target.hurt(GameData.GunDamage);
+				if (!target.alive) {
+					gibGroup.add(new entities.Gib(Enemy, target.x, target.y));
+				}
 			case Citizen:
-				target.kill();
+				target.hurt(GameData.GunDamage);
 		}
 
-		npcs.remove(target);
-		removeShadow(target);
-		Enemy.shootableEntities.remove(target);
+		if (!target.alive) {
+			crushSound.play();
+			peopleGroup.remove(target, true);
+			npcs.remove(target);
+			removeShadow(target);
+			Enemy.shootableEntities.remove(target);
+		}
 	}
 }

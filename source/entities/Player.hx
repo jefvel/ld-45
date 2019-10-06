@@ -13,6 +13,7 @@ class Player extends FlxSpriteGroup {
     public var body: entities.Person;
 
     private var armRotation: Float;
+    private var armRotationShift: Float;
 
     private var horseDrag = 370.0;
     private var shotRecoil = 190.0;
@@ -97,12 +98,14 @@ class Player extends FlxSpriteGroup {
 
         var wobbliness = cast(velocity, flixel.math.FlxVector).length;
 
+        armRotationShift -= (armRotationShift * 0.5);
+
         body.x = x;
         body.y = y - 25 + offsetY;
         body.flipX = horse.flipX;
         body.angle = wobbGet(wobbliness * 0.5, 2.1, 0.9) * 0.1;
 
-        arm.angle = armRotation / Math.PI * 180;
+        arm.angle = armRotation / Math.PI * 180 + armRotationShift;
 
         leg1.x = x - 15;
         leg1.y = y + 3 + offsetY;
@@ -139,6 +142,7 @@ class Player extends FlxSpriteGroup {
         d.scale(shotRecoil);
         velocity.add(d.x, d.y);
         armRotation = Math.atan2(y - arm.y, x - arm.x);
-        arm.angle = armRotation / Math.PI * 180;
+        armRotationShift = Math.random() * 20 - 10;
+        arm.angle = armRotation / Math.PI * 180 + armRotationShift;
     }
 }

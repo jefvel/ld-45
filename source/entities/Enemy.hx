@@ -10,24 +10,33 @@ enum EnemyState {
     Moving;
     Resting;
     Shooting;
+    Aiming;
     Looting;
     Dead;
+    Hurt;
     None;
 }
 
 class Enemy extends entities.Person {
     var curState = None;
 
+    var aimTimeLeft = 0.0;
+    var hurtTimeLeft = 0.0;
+
+    var aimPosX = 0.0;
+    var aimPosY = 0.0;
+    
+    var gunPosX = 29;
+    var gunPosY = 23;
+
     // Shooting
     public static var shootableEntities = new Array<entities.Person>();
 	var projectileCanvas: ProjectileCanvas;
-    var detectRadius: Float = 190;
-    var shootTarget: FlxSprite;
+    var shootTarget: entities.Person;
     var reloaded = true ;
     var reloadTime: Float = 1.7;
     var reloadTimer: FlxTimer;
 	var gunShotSound: FlxSound;
-	var crushSound: FlxSound;
 
     // Movement
     var destX: Float = 0;
@@ -37,19 +46,23 @@ class Enemy extends entities.Person {
     var shotRecoil = 120.0;
     var enemyDrag = 1.0;
     var restTimer: FlxTimer;
+
+    var bulletID = -1;
     
     override public function new() {
         super();
         personType = Enemy;
+        this.health = GameData.EnemyHealth;
+
         loadGraphic(AssetPaths.enemy__png, true, 32, 64);
         animation.add("walk", [0, 1], 3, true);
         animation.add("idle", [2, 3], 1, true);
         animation.add("aim", [4], 1, false);
+        animation.add("hurt", [5], 1, true);
 
 		gunShotSound = FlxG.sound.load(AssetPaths.gunshot__wav);
-		crushSound = FlxG.sound.load(AssetPaths.death__wav);
      
-        offset.set(14, 48);
+        offset.set(16, 48);
         updateHitbox();
         drag.set(enemyDrag, enemyDrag);
 		
@@ -68,20 +81,33 @@ class Enemy extends entities.Person {
             case Resting:
                 animation.play("idle");
                 if (scanForTarget()) {
+                    prepareForShot(shootTarget);
+                }
+            case Aiming:
+                animation.play("aim");
+                velocity.set(0, 0);
+                aimTimeLeft -= elapsed;
+                if (aimTimeLeft <= 0) {
                     shoot();
                 }
             case Shooting:
                 animation.play("aim");
                 if (scanForTarget()) {
-                    shoot();
+                    prepareForShot(shootTarget);
                 } else {
                     move();
                 }
             case Looting:
             case Dead:
+            case Hurt:
+                hurtTimeLeft -= elapsed;
+                velocity.set(0, 0);
+                if (hurtTimeLeft <= 0) {
+                    rest();
+                }
             case Moving:
                 if (scanForTarget()) {
-                    shoot();
+                    prepareForShot(shootTarget);
                 } else {
                     setMoveDest(
                         destX,
@@ -129,6 +155,17 @@ class Enemy extends entities.Person {
         );
     }
 
+    public override function hurt(amount: Float) {
+        super.hurt(amount);
+        animation.play("hurt");
+        hurtTimeLeft = GameData.EnemyHurtRecoveryTime;
+        if (bulletID != -1) {
+            projectileCanvas.cancelShot(bulletID);
+            bulletID = -1;
+        }
+        curState = Hurt;
+    }
+
     public function setMoveDest(x:Float, y:Float) {
         destX = x;
         destY = y;
@@ -154,7 +191,6 @@ class Enemy extends entities.Person {
             for (e in shootableEntities) {
                 if (checkTarget(e)) {
                     shootTarget = e;
-                    curState = Shooting;
                     return true;
                 }
             }
@@ -167,13 +203,25 @@ class Enemy extends entities.Person {
             var dx = entity.x - this.x;
             var dy = entity.y - this.y;
             var d = Math.sqrt(dy * dy + dx * dx);
-            return d < detectRadius;
+            return d < GameData.EnemyGunRange;
         }
         return false;
     }
 
     public function setProjectileCanvas(canvas: ProjectileCanvas) {
         this.projectileCanvas = canvas;
+    }
+
+    private function prepareForShot(target: entities.Person) {
+        if (!reloaded) {
+            return;
+        }
+        aimTimeLeft = GameData.EnemyAimTime;
+        curState = Aiming;
+        aimPosX = target.x;
+        aimPosY = target.y;
+        bulletID = projectileCanvas.addShotPreview(x + (flipX ? 32 - gunPosX : gunPosX), y + gunPosY, aimPosX, aimPosY, GameData.EnemyAimTime);
+        flipX = (aimPosX < x);
     }
 
     private function shoot() {
@@ -189,12 +237,13 @@ class Enemy extends entities.Person {
 
         if (reloaded) {
             // Shoot
-            var worldPos = shootTarget.getPosition();
+            //var worldPos = shootTarget.getPosition();
+            var worldPos = new FlxPoint(aimPosX, aimPosY);
+            var gunPos = new FlxPoint(x + (flipX ? 32 - gunPosX : gunPosX), y + gunPosY);
             var v = new flixel.math.FlxVector(worldPos.x - x, worldPos.y - y);
             v.normalize();
             v.scale(500);
 
-            var gunPos = new FlxPoint(x, y);
 
             var tpos = new FlxPoint(x + v.x, y + v.y);
 
@@ -213,7 +262,6 @@ class Enemy extends entities.Person {
                 v.scale(d);
                 tpos.x = gunPos.x + v.x;
                 tpos.y = gunPos.y + v.y;
-				gunShotSound.stop();
 			}
                 
 			gunShotSound.stop();
