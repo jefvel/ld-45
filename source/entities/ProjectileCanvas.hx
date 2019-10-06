@@ -27,12 +27,14 @@ class ProjectileCanvas extends flixel.FlxSprite {
     public override function update(elapsed: Float) {
         super.update(elapsed);
         this.fill(FlxColor.TRANSPARENT);
+        var px = FlxG.camera.scroll.x;
+        var py = FlxG.camera.scroll.y;
         var lineStyle:LineStyle = { color: FlxColor.WHITE, thickness: 4, capsStyle: openfl.display.CapsStyle.SQUARE };
         for (shot in shots) {
             var lt = shot.lifeTime / bulletLifetime;
             lineStyle.color.alpha = Std.int(255 * lt);
             lineStyle.thickness = 2 + (1.0 - lt) * 2;
-            this.drawLine(shot.x1, shot.y1, shot.x2, shot.y2, lineStyle);
+            this.drawLine(shot.x1 - px, shot.y1 - py, shot.x2 - px, shot.y2 - py, lineStyle);
             shot.lifeTime -= elapsed;
             if (shot.lifeTime <= 0) {
                 shots.remove(shot);

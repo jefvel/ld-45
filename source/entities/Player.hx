@@ -23,8 +23,19 @@ class Player extends FlxSpriteGroup {
     var leg3: FlxSprite;
     var leg4: FlxSprite;
 
+    var shadow: FlxSprite;
+
+    var margin: Float = 64;
+
     override public function new() {
         super();
+
+        maxVelocity.set(500, 500); 
+
+        shadow = new FlxSprite(null, null, AssetPaths.shadow_big__png);
+        shadow.y = 25;
+        shadow.x = -20;
+        add(shadow);
         horse = new Horse();
         mass = 100.0;
         drag.set(horseDrag, horseDrag);
@@ -67,24 +78,14 @@ class Player extends FlxSpriteGroup {
 	{
 		super.update(elapsed);
         totalTime += elapsed;
-        /*
-        var dx = x - horse.x;
-        var dy = y - horse.y;
-        var d = Math.sqrt(dy * dy + dx * dx);
-        if (d < destLambda) {
-            dx = dy = 0;
-        } else {
-            dx /= d;
-            dy /= d;
-            horse.flipX = dx < 0;
+
+        if (y < GameData.SkyLimit) {
+            y = GameData.SkyLimit;
+            velocity.y *= 0.1;
         }
-        
-        horse.velocity.set(speed * dx, speed * dy);
-        */
-        y = Math.max(y, GameData.SkyLimit);
 
         if (Math.abs(this.velocity.x) > 2) {
-           flipX = this.velocity.x < 0;
+           horse.flipX = this.velocity.x < 0;
         }
 
         arm.x = x;
@@ -92,7 +93,7 @@ class Player extends FlxSpriteGroup {
 
         body.x = x;
         body.y = y - 25;
-        body.flipX = flipX;
+        body.flipX = horse.flipX;
 
         var wobbliness = cast(velocity, flixel.math.FlxVector).length;
 
@@ -114,7 +115,17 @@ class Player extends FlxSpriteGroup {
         leg4.y = y + 8;
         leg4.angle = wobbGet(wobbliness, 5.0);
 
-        leg1.flipX = leg2.flipX = leg3.flipX = leg4.flipX = flipX;
+        leg1.flipX = leg2.flipX = leg3.flipX = leg4.flipX = horse.flipX;
+
+        if (x < 0 + margin) {
+            x = margin;
+        }
+        if (x > GameData.WorldWidth - margin) {
+            x = GameData.WorldWidth - margin;
+        }
+        if (y > GameData.WorldHeight - margin * 2) {
+            y = GameData.WorldHeight - margin * 2;
+        }
 	}
 
     public function shoot(x:Float, y:Float) {
