@@ -44,6 +44,10 @@ class MainMenuState extends FlxState
 		playBtn = new FlxButton(FlxG.width * 0.4, FlxG.height * 0.8, "Get some!", onClickPlay);
 		playBtn.setSize(Math.floor(FlxG.width * 0.3), Math.floor(FlxG.height * 0.1));
 		playBtn.setGraphicSize(cast playBtn.width, cast playBtn.height);
+		
+		playBtn = new FlxButton(FlxG.width * 0.4, FlxG.height * 0.8, "Get some!", onClickPlay);
+		playBtn.setSize(Math.floor(FlxG.width * 0.3), Math.floor(FlxG.height * 0.1));
+		playBtn.setGraphicSize(cast playBtn.width, cast playBtn.height);
 
 		super.create();
 		add(titleText);

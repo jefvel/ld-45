@@ -1,7 +1,12 @@
 package states;
 
+import openfl.display.Sprite;
+import flixel.group.FlxSpriteGroup;
+import flixel.ui.FlxButton;
+import entities.Person;
 import js.html.ScreenOrientation;
 import flixel.text.FlxText;
+import flixel.util.FlxSignal;
 import GameData;
 import Score;
 import states.MainMenuState;
@@ -20,6 +25,7 @@ import entities.Civilian;
 import entities.ShotTools;
 import entities.Enemy;
 import entities.Barrel;
+import entities.Shadow;
 
 class PlayState extends FlxState
 {
@@ -42,7 +48,7 @@ class PlayState extends FlxState
 	var impactSound: FlxSound;
 	var bloodSplashSound: FlxSound;
 
-	var shadows: flixel.group.FlxGroup;
+	var shadows: flixel.group.FlxTypedGroup<Shadow>;
 
 	var gibGroup: FlxGroup;
 	var peopleGroup: flixel.group.FlxTypedGroup<FlxSprite>;
@@ -57,6 +63,12 @@ class PlayState extends FlxState
 	var nextBarrelToDeposit: Barrel;
 
 	var barrelDepositionQueue: Array<Barrel>;
+
+	// Death UI
+	var deathGroup: FlxSpriteGroup;
+	var deathText: FlxText;
+	var retryButton: FlxButton;
+	var mainMenuButton: FlxButton;
 
 	function spawn() {
 		FlxG.camera.setScrollBoundsRect(0, 0, GameData.WorldWidth, FlxG.stage.stageHeight, true);
@@ -77,7 +89,7 @@ class PlayState extends FlxState
 		peopleGroup.add(player);
 		camera.follow(player);
 		camera.targetOffset.set(-32, -168);
-		Enemy.shootableEntities.push(player.body);
+		entities.Enemy.shootableEntities.push(player.body);
 
 		// Spawn civilians
 		for (i in 0...5) {
@@ -94,7 +106,7 @@ class PlayState extends FlxState
 			peopleGroup.add(civilian);
 			npcs.push(civilian);
 			attachShadow(AssetPaths.shadow_small__png, civilian, 0, 53);
-			Enemy.shootableEntities.push(civilian);
+			entities.Enemy.shootableEntities.push(civilian);
 		}
 		
 		spawnEnemyWave();
@@ -175,8 +187,8 @@ class PlayState extends FlxState
 	}
 
 	function removeShadow(target: FlxSprite) {
-		for (e in shadows.iterator()) {
-			if (cast(e, entities.Shadow).target == target) {
+		for (e in shadows) {
+			if (e.target == target) {
 				shadows.remove(e);
 				return;
 			}
@@ -231,7 +243,10 @@ class PlayState extends FlxState
 	{
 		super.create();
 
+		ShotTools.NpcHitSignal = new FlxTypedSignal<entities.Person->Void>();
 		ShotTools.NpcHitSignal.add(npcHitCallback);
+
+		BloodExplosion.BloodHitGroundSignal = new FlxTypedSignal<FlxPoint->Void>();
 		BloodExplosion.BloodHitGroundSignal.add(bloodHitGroundSignal);
 
 		gunShotSound = FlxG.sound.load(AssetPaths.gunshot__ogg);
@@ -255,7 +270,7 @@ class PlayState extends FlxState
 
 		createRocksAndStuff();
 		
-		shadows = new flixel.group.FlxGroup();
+		shadows = new flixel.group.FlxTypedGroup<Shadow>();
 		add(shadows);
 
 		saloon = new entities.Saloon();
@@ -280,6 +295,25 @@ class PlayState extends FlxState
 		add(scoreDisplay);
 		score.toggleTimeScore();
 
+		// Death UI
+		deathGroup = new FlxSpriteGroup();
+		deathGroup.scrollFactor.set(0, 0);
+
+		deathText = new FlxText(0, FlxG.height * 0.3, FlxG.width, "D E A D", 64);
+		deathText.alignment = FlxTextAlign.CENTER;
+		deathText.color = 0xFF9E2835;
+		deathGroup.add(deathText);
+
+		retryButton = new FlxButton(FlxG.width * 0.3, FlxG.height * 0.5, "Retry", restartGame);
+		retryButton.setSize(Math.floor(FlxG.width * 0.2), Math.floor(FlxG.height * 0.1));
+		retryButton.setGraphicSize(cast retryButton.width, cast retryButton.height);
+		deathGroup.add(retryButton);
+		
+		mainMenuButton = new FlxButton(FlxG.width * 0.55, FlxG.height * 0.5, "Exit", exitGame);
+		mainMenuButton.setSize(Math.floor(FlxG.width * 0.2), Math.floor(FlxG.height * 0.1));
+		mainMenuButton.setGraphicSize(cast mainMenuButton.width, cast mainMenuButton.height);
+		deathGroup.add(mainMenuButton);
+
 		spawn();
 	}
 
@@ -287,6 +321,8 @@ class PlayState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		if (!player.body.alive)
+			return;
 
 		timeUntilNextWave -= elapsed;
 		if (timeUntilNextWave < 0) {
@@ -371,9 +407,18 @@ class PlayState extends FlxState
 		scoreDisplay.color = Score.PlayerScore < 0 ? 0xFF9E2835 : 0xFF193C3E;
 	}
 
+	function displayDeathScreen() {
+		scoreDisplay.visible = !scoreDisplay.visible;
+		add(deathGroup);
+	}
+
 	function npcHitCallback(target: entities.Person) {
 		switch (target.personType) {
 			case Player:
+				target.hurt(GameData.GunDamage);
+				if (!target.alive) {
+					displayDeathScreen();
+				}
 			case Enemy: 
 				impactSound.play();
 				target.hurt(GameData.GunDamage);
@@ -394,7 +439,7 @@ class PlayState extends FlxState
 			peopleGroup.remove(target, true);
 			npcs.remove(target);
 			removeShadow(target);
-			Enemy.shootableEntities.remove(target);
+			entities.Enemy.shootableEntities.remove(target);
 
 			// Gore
 			crushSound.play();
@@ -410,6 +455,15 @@ class PlayState extends FlxState
 			add(gore);
 			bloodCanvas.addBloodsplatter(target.x, target.y);
 		}
+	}
+
+	function restartGame() {
+		score.toggleTimeScore();
+		if (Score.PlayerScore > GameData.HighScore)
+			GameData.HighScore = Score.PlayerScore;
+		Score.PlayerScore = 0;
+
+		FlxG.resetState();
 	}
 
 	function exitGame() {

@@ -13,7 +13,7 @@ import flixel.util.FlxSignal;
 import flixel.util.FlxTimer;
 
 class BloodExplosion extends FlxEmitter {
-	public static var BloodHitGroundSignal = new FlxTypedSignal<FlxPoint->Void>();
+	public static var BloodHitGroundSignal: FlxTypedSignal<FlxPoint->Void>; // Assign in gamestate
     public static var numParticles = 4;
     static var minParticleScale = 0.2;
     static var maxParticleScale = 0.8;

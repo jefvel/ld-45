@@ -6,7 +6,7 @@ import flixel.FlxSprite;
 import flixel.util.FlxSignal;
 
 class ShotTools {
-	public static var NpcHitSignal = new FlxTypedSignal<entities.Person->Void>();
+	public static var NpcHitSignal: FlxTypedSignal<entities.Person->Void>; // Assign from state
     
     static inline var EPS = 0.00000001;
     // Returns Math.POSITIVE_INFINITY if no hit

@@ -9,7 +9,6 @@ import flixel.util.FlxSignal;
 import flixel.group.FlxGroup;
 
 class BloodSplatter extends FlxSprite {
-    public static var ExpiredSignal = new FlxTypedSignal<BloodSplatter->Void>();
     public var lifeSpan = 8.0;
     public var lifeTimer = new FlxTimer();
 
@@ -24,7 +23,6 @@ class BloodCanvas extends FlxGroup{
 
     public function new() {
         super();
-		// BloodSplatter.ExpiredSignal.add(removeBloodsplatter);
     }
 
     public function addBloodsplatter(x, y) {
