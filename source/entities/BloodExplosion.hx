@@ -69,7 +69,7 @@ class BloodExplosion extends FlxEmitter {
         while(--i >= 0) {
             if(particleTimer.finished) {
                 BloodExplosion.BloodHitGroundSignal.dispatch(
-                    new FlxPoint(goreParticles[i].x, goreParticles[i].y)
+                    FlxPoint.get(goreParticles[i].x, goreParticles[i].y)
                     );
                 goreParticles[i].destroy();
                 goreParticles.splice(i, 1);

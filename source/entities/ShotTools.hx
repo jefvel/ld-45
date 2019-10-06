@@ -29,10 +29,10 @@ class ShotTools {
 
     // Test every line in hitbox for intersections, returns Math.POSITIVE_INFINITY if no hit
     public static function lineHitsSprite(a1: FlxPoint, a2: FlxPoint, s: FlxSprite): Float {
-        var b1 = new FlxPoint();
-        var b2 = new FlxPoint();
+        var b1 = FlxPoint.get();
+        var b2 = FlxPoint.get();
 
-        var res = new FlxPoint();
+        var res = FlxPoint.get();
         var max = Math.POSITIVE_INFINITY;
         var hb = s.getHitbox();
 
