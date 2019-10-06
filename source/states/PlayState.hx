@@ -8,6 +8,7 @@ import flixel.math.FlxPoint;
 import flixel.system.FlxSound;
 import entities.Player;
 import entities.ProjectileCanvas;
+import entities.BloodCanvas;
 import entities.Civilian;
 import entities.ShotTools;
 import entities.Enemy;
@@ -20,6 +21,7 @@ class PlayState extends FlxState
 	var player:Player;
 
 	var projectileCanvas: ProjectileCanvas;
+	var bloodCanvas: BloodCanvas;
 	var saloon: FlxSprite;
 
 	var npcs: Array<FlxSprite>;
@@ -33,6 +35,9 @@ class PlayState extends FlxState
 		add(player);
 		Enemy.shootableEntities.push(player.arm);
 
+		bloodCanvas = new BloodCanvas();
+		add(bloodCanvas);
+		
 		projectileCanvas = new ProjectileCanvas();
 		add(projectileCanvas);
 
@@ -141,6 +146,7 @@ class PlayState extends FlxState
 
 	function npcHitCallback(target: FlxSprite) {
 		crushSound.play();
+		bloodCanvas.addBloodsplatter(target.x, target.y);
 		remove(target);
 		npcs.remove(target);
 		Enemy.shootableEntities.remove(target);
