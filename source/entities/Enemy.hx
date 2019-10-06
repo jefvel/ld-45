@@ -77,6 +77,10 @@ class Enemy extends FlxSprite {
                 if (scanForTarget()) {
                     shoot();
                 } else {
+                    setMoveDest(
+                        destX,
+                        destY
+                    );
                     var dx = destX - x;
                     var dy = destY - y;
                     var d = Math.sqrt(dy * dy + dx * dx);
@@ -137,7 +141,6 @@ class Enemy extends FlxSprite {
 
     public function scanForTarget(): Bool {
         if (checkTarget(shootTarget)) {
-            trace(shootTarget);
             return true;
         } else {
             for (e in shootableEntities) {
