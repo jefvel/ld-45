@@ -15,6 +15,7 @@ import entities.BloodExplosion;
 import entities.Civilian;
 import entities.ShotTools;
 import entities.Enemy;
+import entities.Barrel;
 
 class PlayState extends FlxState
 {
@@ -25,7 +26,7 @@ class PlayState extends FlxState
 
 	var projectileCanvas: ProjectileCanvas;
 	var bloodCanvas: BloodCanvas;
-	var saloon: FlxSprite;
+	var saloon: entities.Saloon;
 
 	var npcs: Array<entities.Person>;
 
@@ -43,10 +44,22 @@ class PlayState extends FlxState
 
 	var timeUntilNextWave = 0.0;
 
+	var allBarrels: Array<Barrel>;
+	var collectedBarrels: Array<Barrel>;
+
+	var nextBarrelToDeposit: Barrel;
+
+	var barrelDepositionQueue: Array<Barrel>;
+
 	function spawn() {
 		FlxG.camera.setScrollBoundsRect(0, 0, GameData.WorldWidth, FlxG.stage.stageHeight, true);
+
 		player = new Player();
 		player.setPosition(200, GameData.SkyLimit + 150);
+
+		collectedBarrels = [];
+		allBarrels = [];
+		barrelDepositionQueue = [];
 		
 		projectileCanvas = new ProjectileCanvas();
 		add(projectileCanvas);
@@ -58,9 +71,6 @@ class PlayState extends FlxState
 		camera.follow(player);
 		camera.targetOffset.set(-32, -168);
 		Enemy.shootableEntities.push(player.body);
-
-		bloodCanvas = new BloodCanvas();
-		add(bloodCanvas);
 
 		// Spawn civilians
 		for (i in 0...5) {
@@ -81,6 +91,45 @@ class PlayState extends FlxState
 		}
 		
 		spawnEnemyWave();
+
+		var bar = spawnBarrel(300, 300);
+		collectBarrel(bar);
+	}
+
+	function depositBarrels() {
+		if (collectedBarrels.length > 0) {
+			barrelDepositionQueue = barrelDepositionQueue.concat(collectedBarrels);
+			for (i in 0...barrelDepositionQueue.length) {
+				if (i == 0) {
+					barrelDepositionQueue[i].following = saloon.door;
+				} else {
+					barrelDepositionQueue[i].following = barrelDepositionQueue[i - 1];
+				}
+			}
+
+			collectedBarrels = [];
+		}
+	}
+
+	function spawnBarrel(x, y) {
+		var b = new Barrel();
+		b.x = x;
+		b.y = y;
+		peopleGroup.add(b);
+		allBarrels.push(b);
+		return b;
+	}
+
+	function collectBarrel(b: Barrel) {
+		if (collectedBarrels.length == 0) {
+			b.following = player;
+		} else {
+			var prev = collectedBarrels[collectedBarrels.length - 1];
+			b.following = prev;
+		}
+
+		allBarrels.remove(b);
+		collectedBarrels.push(b);
 	}
 
 	function getXFarFromPlayer() {
@@ -204,11 +253,11 @@ class PlayState extends FlxState
 		shadows = new flixel.group.FlxGroup();
 		add(shadows);
 
-		saloon = new FlxSprite();
-		saloon.x = 120;
-		saloon.y = GameData.SkyLimit - 220;
-		saloon.loadGraphic(AssetPaths.saloon__png);
+		saloon = new entities.Saloon();
 		add(saloon);
+
+		bloodCanvas = new BloodCanvas();
+		add(bloodCanvas);
 
 		gibGroup = new FlxGroup();
 		add(gibGroup);
@@ -271,6 +320,31 @@ class PlayState extends FlxState
 			mf.y = gunPos.y;
 			add(mf);
 		}
+
+		for (b in allBarrels) {
+			if (FlxG.overlap(b, player)) {
+				collectBarrel(b);
+			}
+		}
+
+		if (FlxG.overlap(player, saloon)) {
+			depositBarrels();
+		}
+
+		if (barrelDepositionQueue.length > 0) {
+			var nextBarrel = barrelDepositionQueue[0];
+			if (FlxG.overlap(nextBarrel, saloon.door)) {
+				nextBarrel.alpha -= elapsed * 4.0;
+				if (nextBarrel.alpha <= 0) {
+					barrelDepositionQueue.remove(nextBarrel);
+					nextBarrel.destroy();
+					if(barrelDepositionQueue.length > 0) {
+						barrelDepositionQueue[0].following = saloon.door;
+					}
+				}
+			}
+		}
+
 		peopleGroup.sort(FlxSort.byY, FlxSort.ASCENDING);
 	}
 
@@ -282,6 +356,7 @@ class PlayState extends FlxState
 				target.hurt(GameData.GunDamage);
 				if (!target.alive) {
 					gibGroup.add(new entities.Gib(Enemy, target.x, target.y));
+					spawnBarrel(target.x, target.y + 60);
 				}
 			case Citizen:
 				target.hurt(GameData.GunDamage);
