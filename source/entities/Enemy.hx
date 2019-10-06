@@ -58,6 +58,7 @@ class Enemy extends FlxSprite {
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+        y = Math.max(y, GameData.SkyLimit);
 
         switch curState {
             case Resting:
@@ -76,6 +77,10 @@ class Enemy extends FlxSprite {
                 if (scanForTarget()) {
                     shoot();
                 } else {
+                    setMoveDest(
+                        destX,
+                        destY
+                    );
                     var dx = destX - x;
                     var dy = destY - y;
                     var d = Math.sqrt(dy * dy + dx * dx);
@@ -195,8 +200,6 @@ class Enemy extends FlxSprite {
             }
 
             if (target != null) {
-		        Enemy.shootableEntities.remove(target);
-                shootTarget = null;
                 ShotTools.NpcHitSignal.dispatch(target);
                 v.scale(d);
                 tpos.x = gunPos.x + v.x;
@@ -211,6 +214,8 @@ class Enemy extends FlxSprite {
 
             reloaded = false;
             reloadTimer.start(reloadTime, reloadTimerComplete, 1);
+            
+            shootTarget = null;
         }
     }
 

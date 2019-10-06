@@ -142,5 +142,6 @@ class PlayState extends FlxState
 		crushSound.play();
 		remove(target);
 		npcs.remove(target);
+		Enemy.shootableEntities.remove(target);
 	}
 }
