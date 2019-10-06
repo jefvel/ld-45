@@ -139,5 +139,6 @@ class Player extends FlxSpriteGroup {
         d.scale(shotRecoil);
         velocity.add(d.x, d.y);
         armRotation = Math.atan2(y - arm.y, x - arm.x);
+        arm.angle = armRotation / Math.PI * 180;
     }
 }

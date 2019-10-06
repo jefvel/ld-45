@@ -38,7 +38,14 @@ class PlayState extends FlxState
 	function spawn() {
 		FlxG.camera.setScrollBoundsRect(0, 0, GameData.WorldWidth, FlxG.stage.stageHeight, true);
 		player = new Player();
-		player.setPosition(GameData.WorldWidth * 0.5, GameData.SkyLimit + 150);
+		player.setPosition(200, GameData.SkyLimit + 150);
+		
+		projectileCanvas = new ProjectileCanvas();
+		add(projectileCanvas);
+
+		peopleGroup = new flixel.group.FlxTypedGroup<FlxSprite>();
+		add(peopleGroup);
+
 		peopleGroup.add(player);
 		camera.follow(player);
 		camera.targetOffset.set(-32, -168);
@@ -46,9 +53,6 @@ class PlayState extends FlxState
 
 		// bloodCanvas = new BloodCanvas();
 		// add(bloodCanvas);
-		
-		projectileCanvas = new ProjectileCanvas();
-		add(projectileCanvas);
 
 		// Spawn civilians
 		for (i in 0...5) {
@@ -151,7 +155,6 @@ class PlayState extends FlxState
 		super.create();
 		ShotTools.NpcHitSignal.add(npcHitCallback);
 
-
 		gunShotSound = FlxG.sound.load(AssetPaths.gunshot__ogg);
 		crushSound = FlxG.sound.load(AssetPaths.death__ogg);
 
@@ -169,7 +172,6 @@ class PlayState extends FlxState
 		ground.scrollFactor.set(0, 1.0);
 
 		createRocksAndStuff();
-
 		
 		shadows = new flixel.group.FlxGroup();
 		add(shadows);
@@ -183,9 +185,6 @@ class PlayState extends FlxState
 		gibGroup = new FlxGroup();
 		add(gibGroup);
 
-		peopleGroup = new flixel.group.FlxTypedGroup<FlxSprite>();
-		add(peopleGroup);
-
 		spawn();
 	}
 
@@ -197,13 +196,13 @@ class PlayState extends FlxState
 			var worldPos = FlxG.mouse.getWorldPosition();
 			var arm = player.arm;
 			player.shoot(worldPos.x, worldPos.y);
+			var gunPos = arm.getMuzzleWorldPos();
+			
 			var v = new flixel.math.FlxVector(worldPos.x - arm.x, worldPos.y - arm.y);
 			v.normalize();
 			v.scale(500);
 
-			var gunPos = new FlxPoint(arm.x, arm.y);
-
-			var tpos = new FlxPoint(arm.x + v.x, arm.y + v.y);
+			var tpos = new FlxPoint(gunPos.x + v.x, gunPos.y + v.y);
 
 			var target: entities.Person = null;
 			var d = Math.POSITIVE_INFINITY;
@@ -226,6 +225,11 @@ class PlayState extends FlxState
 			gunShotSound.play();
 
 			projectileCanvas.addShot(gunPos.x, gunPos.y, tpos.x, tpos.y);
+			var mf = new entities.MuzzleFlash();
+			mf.angle = arm.angle;
+			mf.x = gunPos.x;
+			mf.y = gunPos.y;
+			add(mf);
 		}
 		peopleGroup.sort(FlxSort.byY, FlxSort.ASCENDING);
 	}
