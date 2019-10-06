@@ -11,6 +11,7 @@ import flixel.system.FlxSound;
 import entities.Player;
 import entities.ProjectileCanvas;
 import entities.BloodCanvas;
+import entities.BloodExplosion;
 import entities.Civilian;
 import entities.ShotTools;
 import entities.Enemy;
@@ -23,13 +24,14 @@ class PlayState extends FlxState
 	var player:Player;
 
 	var projectileCanvas: ProjectileCanvas;
-	// var bloodCanvas: BloodCanvas;
+	var bloodCanvas: BloodCanvas;
 	var saloon: FlxSprite;
 
 	var npcs: Array<entities.Person>;
 
 	var gunShotSound: FlxSound;
 	var crushSound: FlxSound;
+	var bloodSplashSound: FlxSound;
 	var shadows: flixel.group.FlxGroup;
 
 	var gibGroup: FlxGroup;
@@ -51,8 +53,8 @@ class PlayState extends FlxState
 		camera.targetOffset.set(-32, -168);
 		Enemy.shootableEntities.push(player.body);
 
-		// bloodCanvas = new BloodCanvas();
-		// add(bloodCanvas);
+		bloodCanvas = new BloodCanvas();
+		add(bloodCanvas);
 
 		// Spawn civilians
 		for (i in 0...5) {
@@ -154,9 +156,11 @@ class PlayState extends FlxState
 	{
 		super.create();
 		ShotTools.NpcHitSignal.add(npcHitCallback);
+		BloodExplosion.BloodHitGroundSignal.add(bloodHitGroundSignal);
 
 		gunShotSound = FlxG.sound.load(AssetPaths.gunshot__ogg);
 		crushSound = FlxG.sound.load(AssetPaths.death__ogg);
+		bloodSplashSound = FlxG.sound.load(AssetPaths.splash__ogg);
 
 		npcs = [];
 		
@@ -235,8 +239,6 @@ class PlayState extends FlxState
 	}
 
 	function npcHitCallback(target: entities.Person) {
-		crushSound.play();
-		// bloodCanvas.addBloodsplatter(target.x, target.y);
 		peopleGroup.remove(target, true);
 
 		switch (target.personType) {
@@ -247,9 +249,31 @@ class PlayState extends FlxState
 			case Citizen:
 				target.kill();
 		}
-
+		
+		// Gore
+		crushSound.play();
+		var gore = new BloodExplosion(
+			target.x + target.offset.x,
+			target.y + target.offset.y
+		);
+		gore.setSize(
+			target.width * 0.2,
+			target.height * 0.2
+		);
+        gore.start(true);
+		add(gore);
+		bloodCanvas.addBloodsplatter(target.x, target.y);
+		
+		// Remove entity
+		remove(target);
 		npcs.remove(target);
 		removeShadow(target);
 		Enemy.shootableEntities.remove(target);
+	}
+
+	function bloodHitGroundSignal(loc: FlxPoint) {
+		// Gore
+		bloodSplashSound.play();
+		bloodCanvas.addBloodsplatter(loc.x, loc.y);
 	}
 }
