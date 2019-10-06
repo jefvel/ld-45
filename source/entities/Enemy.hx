@@ -15,11 +15,11 @@ enum EnemyState {
     None;
 }
 
-class Enemy extends FlxSprite {
+class Enemy extends entities.Person {
     var curState = None;
 
     // Shooting
-    public static var shootableEntities = new Array<FlxSprite>();
+    public static var shootableEntities = new Array<entities.Person>();
 	var projectileCanvas: ProjectileCanvas;
     var detectRadius: Float = 190;
     var shootTarget: FlxSprite;
@@ -40,7 +40,11 @@ class Enemy extends FlxSprite {
     
     override public function new() {
         super();
-        loadGraphic(AssetPaths.enemy__png);
+        personType = Enemy;
+        loadGraphic(AssetPaths.enemy__png, true, 32, 64);
+        animation.add("walk", [0, 1], 3, true);
+        animation.add("idle", [2, 3], 1, true);
+        animation.add("aim", [4], 1, false);
 
 		gunShotSound = FlxG.sound.load(AssetPaths.gunshot__wav);
 		crushSound = FlxG.sound.load(AssetPaths.death__wav);
@@ -62,10 +66,12 @@ class Enemy extends FlxSprite {
 
         switch curState {
             case Resting:
+                animation.play("idle");
                 if (scanForTarget()) {
                     shoot();
                 }
             case Shooting:
+                animation.play("aim");
                 if (scanForTarget()) {
                     shoot();
                 } else {
@@ -101,10 +107,12 @@ class Enemy extends FlxSprite {
 
     public function rest() {
         curState = Resting;
+        animation.play("idle");
         restTimer.start(Math.random() * 10.0, restTimerComplete, 1);
     }
     
     public function move() {
+        animation.play("walk");
         curState = Moving;
 
         var yPos = Math.random() * FlxG.height;
@@ -169,6 +177,7 @@ class Enemy extends FlxSprite {
     }
 
     private function shoot() {
+        animation.play("aim");
         this.velocity.set(0, 0);
         if (this.shootTarget == null) {
             return;
@@ -189,7 +198,7 @@ class Enemy extends FlxSprite {
 
             var tpos = new FlxPoint(x + v.x, y + v.y);
 
-            var target: FlxSprite = null;
+            var target: entities.Person = null;
             var d = Math.POSITIVE_INFINITY;
             for (npc in shootableEntities) {
                 var dist = ShotTools.lineHitsSprite(gunPos, tpos, npc);

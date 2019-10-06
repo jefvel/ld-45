@@ -12,7 +12,7 @@ enum CivilianState {
     None;
 }
 
-class Civilian extends FlxSprite {
+class Civilian extends entities.Person {
     private var curState = None;
 
     private var destX: Float = 0;
@@ -24,6 +24,7 @@ class Civilian extends FlxSprite {
     
     override public function new() {
         super();
+        personType = Citizen;
         loadGraphic(AssetPaths.civilian__png);
      
         offset.set(14, 48);

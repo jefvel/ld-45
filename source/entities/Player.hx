@@ -10,7 +10,7 @@ class Player extends FlxSpriteGroup {
     private var speed = 67;
     public var arm: Arm;
     private var horse: Horse;
-    private var body: FlxSprite;
+    public var body: entities.Person;
 
     private var armRotation: Float;
 
@@ -26,19 +26,19 @@ class Player extends FlxSpriteGroup {
     var shadow: FlxSprite;
 
     var margin: Float = 64;
+    var offsetY = 25;
 
     override public function new() {
         super();
 
         maxVelocity.set(500, 500); 
-
-        shadow = new FlxSprite(null, null, AssetPaths.shadow_big__png);
-        shadow.y = 25;
-        shadow.x = -20;
-        add(shadow);
-        horse = new Horse();
         mass = 100.0;
         drag.set(horseDrag, horseDrag);
+
+        shadow = new FlxSprite(null, null, AssetPaths.shadow_big__png);
+        shadow.y = 25 + offsetY;
+        shadow.x = -20;
+        add(shadow);
 
         leg1 = new FlxSprite(null, null, AssetPaths.horseleg__png);
         leg1.offset.set(5, 1);
@@ -49,18 +49,22 @@ class Player extends FlxSpriteGroup {
         leg2.origin.set(5, 1);
         add(leg2);
 
+        horse = new Horse();
+        horse.y = offsetY;
         add(horse);
 
         leg3 = new FlxSprite(null, null, AssetPaths.horseleg__png);
         leg3.offset.set(5, 1);
         leg3.origin.set(5, 1);
         add(leg3);
+
         leg4 = new FlxSprite(null, null, AssetPaths.horseleg__png);
         leg4.offset.set(5, 1);
         leg4.origin.set(5, 1);
         add(leg4);
 
-        body = new FlxSprite();
+        body = new entities.Person();
+        body.personType = Player;
         body.loadGraphic(AssetPaths.sheriff__png);
         body.offset.set(23, 55);
         add(body);
@@ -69,8 +73,8 @@ class Player extends FlxSpriteGroup {
         add(arm);
     }
 
-    function wobbGet(wobbliness:Float, offset: Float) {
-        return wobbliness * Math.sin(offset + totalTime * 20.0 + 0.4 * (Math.random() - 0.5)) * 0.3;
+    function wobbGet(wobbliness:Float, offset: Float, scale:Float = 1.0) {
+        return wobbliness * Math.sin(offset + scale * totalTime * 20.0 + 0.4 * (Math.random() - 0.5)) * 0.3;
     }
 
     var totalTime = 0.0;
@@ -89,30 +93,31 @@ class Player extends FlxSpriteGroup {
         }
 
         arm.x = x;
-        arm.y = y - 60;
-
-        body.x = x;
-        body.y = y - 25;
-        body.flipX = horse.flipX;
+        arm.y = y - 60 + offsetY;
 
         var wobbliness = cast(velocity, flixel.math.FlxVector).length;
+
+        body.x = x;
+        body.y = y - 25 + offsetY;
+        body.flipX = horse.flipX;
+        body.angle = wobbGet(wobbliness * 0.5, 2.1, 0.9) * 0.1;
 
         arm.angle = armRotation / Math.PI * 180;
 
         leg1.x = x - 15;
-        leg1.y = y + 3;
+        leg1.y = y + 3 + offsetY;
         leg1.angle = wobbGet(wobbliness, 2.0);
 
         leg2.x = x + 28;
-        leg2.y = y + 3;
+        leg2.y = y + 3 + offsetY;
         leg2.angle = wobbGet(wobbliness, 4.0);
 
         leg3.x = x - 20;
-        leg3.y = y + 5;
+        leg3.y = y + 5 + offsetY;
         leg3.angle = wobbGet(wobbliness, 1.2);
 
         leg4.x = x + 23;
-        leg4.y = y + 8;
+        leg4.y = y + 8 + offsetY;
         leg4.angle = wobbGet(wobbliness, 5.0);
 
         leg1.flipX = leg2.flipX = leg3.flipX = leg4.flipX = horse.flipX;

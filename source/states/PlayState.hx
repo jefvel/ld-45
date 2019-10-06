@@ -4,6 +4,7 @@ import GameData;
 import flixel.FlxSprite;
 import flixel.FlxG;
 import flixel.group.FlxGroup;
+import flixel.util.FlxSort;
 import flixel.FlxState;
 import flixel.math.FlxPoint;
 import flixel.system.FlxSound;
@@ -22,26 +23,28 @@ class PlayState extends FlxState
 	var player:Player;
 
 	var projectileCanvas: ProjectileCanvas;
-	var bloodCanvas: BloodCanvas;
+	// var bloodCanvas: BloodCanvas;
 	var saloon: FlxSprite;
 
-	var npcs: Array<FlxSprite>;
+	var npcs: Array<entities.Person>;
 
 	var gunShotSound: FlxSound;
 	var crushSound: FlxSound;
 	var shadows: flixel.group.FlxGroup;
 
+	var peopleGroup: flixel.group.FlxTypedGroup<FlxSprite>;
+
 	function spawn() {
 		FlxG.camera.setScrollBoundsRect(0, 0, GameData.WorldWidth, FlxG.stage.stageHeight, true);
 		player = new Player();
 		player.setPosition(GameData.WorldWidth * 0.5, GameData.SkyLimit + 150);
-		add(player);
+		peopleGroup.add(player);
 		camera.follow(player);
 		camera.targetOffset.set(-32, -168);
-		Enemy.shootableEntities.push(player.arm);
+		Enemy.shootableEntities.push(player.body);
 
-		bloodCanvas = new BloodCanvas();
-		add(bloodCanvas);
+		// bloodCanvas = new BloodCanvas();
+		// add(bloodCanvas);
 		
 		projectileCanvas = new ProjectileCanvas();
 		add(projectileCanvas);
@@ -58,7 +61,7 @@ class PlayState extends FlxState
 			// } else {
 			// 	civilian.setPosition(GameData.WorldWidth + civilian.width, yPos);
 			// }
-			add(civilian);
+			peopleGroup.add(civilian);
 			npcs.push(civilian);
 			attachShadow(AssetPaths.shadow_small__png, civilian, 0, 53);
 			Enemy.shootableEntities.push(civilian);
@@ -77,7 +80,7 @@ class PlayState extends FlxState
 			// } else {
 				enemy.setPosition(GameData.WorldWidth + enemy.width, yPos);
 			// }
-			add(enemy);
+			peopleGroup.add(enemy);
 			enemy.setProjectileCanvas(projectileCanvas);
 			npcs.push(enemy);
 			attachShadow(AssetPaths.shadow_small__png, enemy, 0, 53);
@@ -98,10 +101,24 @@ class PlayState extends FlxState
 		}
 	}
 
-	var rocks: FlxGroup;
+	var bgDetails: FlxGroup;
 	inline static var RockAmount = 60;
 	function createRocksAndStuff() {
-		rocks = new FlxGroup();
+		bgDetails = new FlxGroup();
+
+		// Clouds
+		for (i in 0...20) {
+			var r = new FlxSprite(
+				Math.random() * GameData.WorldWidth,
+				Math.random() * GameData.SkyLimit * 0.5
+			);
+			r.loadGraphic(AssetPaths.clouds__png, true, 64, 32);
+			r.animation.randomFrame();
+			r.scrollFactor.x = 0.1 + Math.random() * 0.2;
+			bgDetails.add(r);
+		}
+
+		// Border between ground and sky
 		var dx = Std.int(Math.ceil(GameData.WorldWidth / 64));
 		for (i in 0...dx) {
 			var r = new FlxSprite(
@@ -110,8 +127,10 @@ class PlayState extends FlxState
 			);
 			r.loadGraphic(AssetPaths.groundedges__png, true, 64, 8);
 			r.animation.randomFrame();
-			rocks.add(r);
+			bgDetails.add(r);
 		}
+
+		// Ground details (rocks, plants etc)
 		for (i in 0...RockAmount) {
 			var r = new FlxSprite(
 				Math.random() * GameData.WorldWidth, 
@@ -119,9 +138,9 @@ class PlayState extends FlxState
 			);
 			r.loadGraphic(AssetPaths.rocks__png, true, 16, 16);
 			r.animation.randomFrame();
-			rocks.add(r);
+			bgDetails.add(r);
 		}
-		add(rocks);
+		add(bgDetails);
 	}
 
 	override public function create():Void
@@ -154,9 +173,12 @@ class PlayState extends FlxState
 
 		saloon = new FlxSprite();
 		saloon.x = 120;
-		saloon.y = GameData.SkyLimit - 240;
+		saloon.y = GameData.SkyLimit - 220;
 		saloon.loadGraphic(AssetPaths.saloon__png);
 		add(saloon);
+
+		peopleGroup = new flixel.group.FlxTypedGroup<FlxSprite>();
+		add(peopleGroup);
 
 		spawn();
 	}
@@ -177,7 +199,7 @@ class PlayState extends FlxState
 
 			var tpos = new FlxPoint(arm.x + v.x, arm.y + v.y);
 
-			var target: FlxSprite = null;
+			var target: entities.Person = null;
 			var d = Math.POSITIVE_INFINITY;
 			for (npc in npcs) {
 				var dist = ShotTools.lineHitsSprite(gunPos, tpos, npc);
@@ -199,12 +221,23 @@ class PlayState extends FlxState
 
 			projectileCanvas.addShot(gunPos.x, gunPos.y, tpos.x, tpos.y);
 		}
+		peopleGroup.sort(FlxSort.byY, FlxSort.ASCENDING);
 	}
 
-	function npcHitCallback(target: FlxSprite) {
+	function npcHitCallback(target: entities.Person) {
 		crushSound.play();
-		bloodCanvas.addBloodsplatter(target.x, target.y);
-		remove(target);
+		// bloodCanvas.addBloodsplatter(target.x, target.y);
+		peopleGroup.remove(target, true);
+
+		switch (target.personType) {
+			case Player:
+			case Enemy: 
+				target.kill();
+				trace("Shot enemy!");
+			case Citizen:
+				target.kill();
+		}
+
 		npcs.remove(target);
 		removeShadow(target);
 		Enemy.shootableEntities.remove(target);
