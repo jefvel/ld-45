@@ -19,9 +19,9 @@ class GameData {
     public static inline var EnemyReloadTime = 1.7;
     public static inline var EnemyHurtRecoveryTime = 0.2;
 
-    public static inline var CivHealth = 25.0;
-    public static inline var CivCost = 4;
-    public static inline var CivReloadTime = 3.0;
+    public static inline var CivHealth = 26.0;
+    public static inline var CivCost = 3;
+    public static inline var CivReloadTime = 2.6;
     public static inline var CivGunRange = 250.0;
 
     public static var HighScore = 0;

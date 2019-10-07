@@ -48,6 +48,7 @@ class PlayState extends FlxState
 	var impactSound: FlxSound;
 	var pickupSound: FlxSound;
 	var bloodSplashSound: FlxSound;
+	var gameoverSound: FlxSound;
 
 	var shadows: flixel.group.FlxTypedGroup<Shadow>;
 
@@ -66,6 +67,7 @@ class PlayState extends FlxState
 	var barrelDepositionQueue: Array<Barrel>;
 
 	var enemies: Array<entities.Person>;
+    var friendlies:Array<entities.Person>;
 
 	var collectedBarrelCount = 0;
 	var barrelsUntilNewCiv = 0;
@@ -75,6 +77,8 @@ class PlayState extends FlxState
 	var deathText: FlxText;
 	var retryButton: FlxButton;
 	var mainMenuButton: FlxButton;
+
+	var barrelArrow: FlxSprite;
 
 	function spawn() {
 		FlxG.camera.setScrollBoundsRect(0, 0, GameData.WorldWidth, FlxG.stage.stageHeight, true);
@@ -95,24 +99,20 @@ class PlayState extends FlxState
 		peopleGroup.add(player);
 		camera.follow(player);
 		camera.targetOffset.set(-32, -168);
-		entities.Enemy.shootableEntities.push(player.body);
+		friendlies.push(player.body);
 
 		// Spawn civilians
-		for (i in 0...5) {
-			/*
-			var civilian = new Civilian();
-			var yPos = (Math.random() * FlxG.height);
-			if (yPos < GameData.SkyLimit) {
-				yPos += GameData.SkyLimit;
-			}
-			*/
-			// if (Math.random() > 0.5) {
-			spawnCitizen(saloon.door.x, saloon.door.y + 30);
-			// } else {
-			// 	civilian.setPosition(GameData.WorldWidth + civilian.width, yPos);
-			// }
+		for (i in 0...1) {
+			//spawnCitizen(saloon.door.x, saloon.door.y + 30);
 		}
 		
+		barrelArrow = new FlxSprite();
+		barrelArrow.loadGraphic(AssetPaths.arrow__png);
+		barrelArrow.scrollFactor.set(0, 0);
+		barrelArrow.y = GameData.SkyLimit - 200;
+		barrelArrow.x = 50;
+		add(barrelArrow);
+
 		spawnEnemyWave();
 	}
 
@@ -178,7 +178,7 @@ class PlayState extends FlxState
 	}
 
 	public function spawnEnemy(x, y) {
-		var enemy = new Enemy();
+		var enemy = new Enemy(friendlies);
 		enemy.setPosition(x, y);
 		peopleGroup.add(enemy);
 		enemy.setProjectileCanvas(projectileCanvas);
@@ -188,12 +188,12 @@ class PlayState extends FlxState
 	}
 
 	public function spawnCitizen(x, y) {
-		var civ = new Civilian(enemies);
+		var civ = new Civilian(enemies, projectileCanvas);
 		civ.setPosition(x, y);
 		peopleGroup.add(civ);
 		npcs.push(civ);
 		attachShadow(AssetPaths.shadow_small__png, civ, 0, 53);
-		entities.Enemy.shootableEntities.push(civ);
+		friendlies.push(civ);
 	}
 
 	function attachShadow(shadowAsset: String, target: FlxSprite, offsetX: Float, offsetY: Float) {
@@ -276,9 +276,11 @@ class PlayState extends FlxState
 		bloodSplashSound = FlxG.sound.load(AssetPaths.splash__ogg);
 
 		pickupSound = FlxG.sound.load(AssetPaths.pickup__ogg);
+		gameoverSound = FlxG.sound.load(AssetPaths.gameover__ogg);
 
 		npcs = [];
 		enemies = [];
+		friendlies = [];
 
 		barrelsUntilNewCiv = GameData.CivCost;
 		
@@ -356,11 +358,20 @@ class PlayState extends FlxState
 		}
 	}
 
+	var time = 0.0;
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		time += elapsed;
 		if (!player.body.alive)
 			return;
+
+
+		var sp = saloon.getScreenPosition();
+		barrelArrow.visible = collectedBarrels.length > 0;
+		barrelArrow.y = GameData.SkyLimit - 120;
+		barrelArrow.x = Math.max(20, sp.x + saloon.width + barrelArrow.width);
+		barrelArrow.x += Math.sin(time) * 10;
 
 		timeUntilNextWave -= elapsed;
 		if (timeUntilNextWave < 0) {
@@ -451,6 +462,7 @@ class PlayState extends FlxState
 			case Player:
 				target.hurt(GameData.GunDamage);
 				if (!target.alive) {
+					gameoverSound.play(true);
 					displayDeathScreen();
 				}
 			case Enemy: 
@@ -474,7 +486,7 @@ class PlayState extends FlxState
 			peopleGroup.remove(target, true);
 			npcs.remove(target);
 			removeShadow(target);
-			entities.Enemy.shootableEntities.remove(target);
+			friendlies.remove(target);
 
 			// Gore
 			crushSound.play();

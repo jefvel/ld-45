@@ -28,10 +28,15 @@ class Civilian extends entities.Person {
     private var enemies: Array<entities.Person>;
 
     private var untilDoneShooting = 0.0;
+
+	var projectileCanvas: ProjectileCanvas;
+
+    var gunShotSound: flixel.system.FlxSound;
     
-    override public function new(enemyArray) {
+    override public function new(enemyArray: Array<entities.Person>, projectiles: ProjectileCanvas) {
         super();
         enemies = enemyArray;
+        this.projectileCanvas = projectiles;
 
         health = GameData.CivHealth;
         personType = Citizen;
@@ -45,6 +50,8 @@ class Civilian extends entities.Person {
 		
         timer = new FlxTimer();
         timer.onComplete = timerComplete;
+
+		gunShotSound = FlxG.sound.load(AssetPaths.gunshot__ogg);
     }
 
 	override public function update(elapsed:Float):Void
@@ -119,11 +126,13 @@ class Civilian extends entities.Person {
         curState = Shooting;
         untilDoneShooting = 0.4;
         ShotTools.NpcHitSignal.dispatch(e);
+        projectileCanvas.addShot(x, y, e.x + Math.random() * 20, e.y + Math.random() * 20);
+        gunShotSound.play();
     }
 
     public function rest() {
         curState = Resting;
-        timer.start(2.0 + Math.random() * 6.0, timerComplete, 1);
+        timer.start(0.5 + Math.random() * 6.0, timerComplete, 1);
     }
 
     public function move() {
