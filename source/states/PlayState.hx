@@ -1,5 +1,8 @@
 package states;
 
+import flixel.util.FlxTimer;
+import flixel.tweens.FlxEase;
+import flixel.tweens.FlxTween;
 import flixel.math.FlxVector;
 import openfl.display.Sprite;
 import flixel.group.FlxSpriteGroup;
@@ -48,6 +51,11 @@ class PlayState extends FlxState
 	var pickupSound: FlxSound;
 	var bloodSplashSound: FlxSound;
 	var gameoverSound: FlxSound;
+	var gamewinSound: FlxSound;
+
+	var gameStartSound: FlxSound;
+
+	var clongSound: FlxSound;
 
 	var shadows: flixel.group.FlxTypedGroup<Shadow>;
 
@@ -94,6 +102,7 @@ class PlayState extends FlxState
 	var indicator: FlxSprite;
 
 	function spawn() {
+		gameStartSound.play();
 		FlxG.camera.setScrollBoundsRect(0, 0, GameData.WorldWidth, FlxG.stage.stageHeight, true);
 
 		player = new Player();
@@ -282,6 +291,7 @@ class PlayState extends FlxState
 	override public function create():Void
 	{
 		super.create();
+		FlxG.camera.zoom = 2;
 
 		FlxG.timeScale = 1.0;
 
@@ -301,6 +311,10 @@ class PlayState extends FlxState
 
 		pickupSound = FlxG.sound.load(AssetPaths.pickup__ogg);
 		gameoverSound = FlxG.sound.load(AssetPaths.gameover__ogg);
+		gamewinSound = FlxG.sound.load(AssetPaths.gamewin__ogg);
+		clongSound = FlxG.sound.load(AssetPaths.clong__ogg);
+
+		gameStartSound = FlxG.sound.load(AssetPaths.gamestart__ogg);
 
 		npcs = [];
 		enemies = [];
@@ -365,10 +379,12 @@ class PlayState extends FlxState
 		deathGroup = new FlxSpriteGroup();
 		deathGroup.scrollFactor.set(0, 0);
 
-		deathText = new FlxText(0, FlxG.height * 0.15, FlxG.width, "D E A D", 64);
+		deathText = new FlxText(0, FlxG.height * 0.25, FlxG.width, "D E A D", 64);
+
 		deathText.alignment = FlxTextAlign.CENTER;
 		deathText.color = 0xFF9E2835;
 		deathGroup.add(deathText);
+
 		var buttonYP = 0.8;
 
 		retryButton = new FlxButton(FlxG.width * 0.3, FlxG.height * buttonYP, "Retry", restartGame);
@@ -376,7 +392,7 @@ class PlayState extends FlxState
 		retryButton.setGraphicSize(cast retryButton.width, cast retryButton.height);
 		deathGroup.add(retryButton);
 
-		mainMenuButton = new FlxButton(FlxG.width * 0.55, FlxG.height * buttonYP, "Exit", exitGame);
+		mainMenuButton = new FlxButton(FlxG.width * 0.55, FlxG.height * buttonYP, "Main Menu", exitGame);
 		mainMenuButton.setSize(Math.floor(FlxG.width * 0.2), Math.floor(FlxG.height * 0.1));
 		mainMenuButton.setGraphicSize(cast mainMenuButton.width, cast mainMenuButton.height);
 		deathGroup.add(mainMenuButton);
@@ -390,7 +406,7 @@ class PlayState extends FlxState
 		victoryText.color = 0xFF265C42;
 		victoryGroup.add(victoryText);
 
-		continueButton = new FlxButton(FlxG.width * 0.4, FlxG.height * buttonYP, "Exit", exitGame);
+		continueButton = new FlxButton(FlxG.width * 0.6, FlxG.height * buttonYP, "Exit", exitGame);
 		continueButton.setSize(Math.floor(FlxG.width * 0.2), Math.floor(FlxG.height * 0.1));
 		continueButton.setGraphicSize(cast continueButton.width, cast continueButton.height);
 		victoryGroup.add(continueButton);
@@ -435,15 +451,7 @@ class PlayState extends FlxState
 
 	var firstMoveDone = false;
 
-	override public function update(elapsed:Float):Void
-	{
-		super.update(elapsed);
-		time += elapsed;
-
-		if (!player.body.alive || victoryAchieved) {
-			return;
-		}
-
+	function gameupdate(elapsed: Float) {
 		var progress = 0.0;
 		var bestCitizen = null;
 		for (e in friendlies) {
@@ -582,30 +590,95 @@ class PlayState extends FlxState
 			}
 		}
 
+		// Check victory condition
+		for (e in npcs) {
+			if (e.personType == PersonType.Citizen && e.x > GameData.VictoryBoundaryX) {
+				winGame();
+			}
+		}
+	}
+
+	function winGame() {
+		displayVictoryScreen();
+		Score.setPlayerHighScore();
+	}
+
+	override public function update(elapsed:Float):Void
+	{
+		super.update(elapsed);
+		time += elapsed;
+
+		if (player.body.alive && !victoryAchieved) {
+			gameupdate(elapsed);
+		}
+
 		peopleGroup.sort(FlxSort.byY, FlxSort.ASCENDING);
 
 		// Update score
 		scoreDisplay.text = "" + Score.PlayerScore;
 		scoreDisplay.color = Score.PlayerScore < 0 ? 0xFF9E2835 : 0xFF193C3E;
-
-		// Check victory condition
-		for (e in npcs) {
-			if (e.personType == PersonType.Citizen && e.x > GameData.VictoryBoundaryX) {
-				victoryAchieved = true;
-				displayVictoryScreen();
-				Score.setPlayerHighScore();
-			}
-		}
 	}
 
 	function displayDeathScreen() {
 		if (!victoryAchieved) {
+			gameoverSound.play(true);
+			// Animate thing
+			deathText.y = FlxG.height * 0.25;
+			deathText.alpha = 0.0;
+			var t = new FlxTimer();
+			t.start(0.4, function(t) {
+				deathText.alpha = 1.0;
+				deathText.y = FlxG.height * 0.2;
+				clongSound.play();
+			});
+
+			retryButton.alpha = 0.0;
+			FlxTween.tween(retryButton, {
+				alpha: 1.0,
+			}, 0.2, { ease: FlxEase.backOut, startDelay: 0.45 });
+
+			mainMenuButton.alpha = 0.0;
+			FlxTween.tween(mainMenuButton, {
+				alpha: 1.0,
+			}, 0.2, { ease: FlxEase.backOut, startDelay: 0.5 });
+
 			// scoreDisplay.visible = !scoreDisplay.visible;
 			add(deathGroup);
 		}
 	}
 
 	function displayVictoryScreen() {
+
+		victoryAchieved = true;
+		gamewinSound.play();
+		for (civ in friendlies) {
+			if(civ.personType == Citizen) {
+				var c = cast(civ, Civilian);
+				c.startCheering();
+			}
+		}
+
+		var winMan = new entities.WinMan();
+		winMan.x = FlxG.width * 0.3;
+		winMan.y = FlxG.height + winMan.height;
+
+		FlxTween.tween(winMan, {
+			y: FlxG.height,
+		}, 0.3, { ease: FlxEase.backOut, startDelay: 4.63 });
+
+		victoryGroup.add(winMan);
+
+		victoryGroup.add(continueButton);
+
+
+		victoryText.alpha = 0.0;
+		victoryText.y = FlxG.height * 0.1;
+		FlxTween.tween(victoryText, {
+			alpha: 1.0,
+			y: FlxG.height * 0.15,
+		}, 0.5, { ease: FlxEase.backOut, startDelay: 4.65 });
+
+/*
 		var newHighScoreSet = Score.PlayerScore > Score.HighScore;
 		if (newHighScoreSet) {
 			var newHighScoreSetDisplay = new FlxText(
@@ -641,6 +714,7 @@ class PlayState extends FlxState
 		yourScoreDisplay.alignment = FlxTextAlign.CENTER;
 		yourScoreDisplay.color = 0xFF164C32;
 		victoryGroup.add(yourScoreDisplay);
+		*/
 
 		add(victoryGroup);
 	}
@@ -648,9 +722,10 @@ class PlayState extends FlxState
 	function npcHitCallback(target: entities.Person) {
 		switch (target.personType) {
 			case Player:
-				target.hurt(GameData.GunDamage);
+				if (!victoryAchieved) {
+					target.hurt(GameData.GunDamage);
+				}
 				if (!target.alive) {
-					gameoverSound.play(true);
 					FlxG.timeScale = 0.2;
 					gibGroup.add(new entities.Gib(Player, target.x - 20, target.y - 50));
 					displayDeathScreen();
@@ -665,7 +740,9 @@ class PlayState extends FlxState
 					enemies.remove(target);
 				}
 			case Citizen:
-				target.hurt(GameData.GunDamage);
+				if (!victoryAchieved) {
+					target.hurt(GameData.GunDamage);
+				}
 				if (!target.alive) {
 					Score.addCivilianKill();
 					gibGroup.add(new entities.Gib(Citizen, target.x, target.y));

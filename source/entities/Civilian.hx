@@ -12,6 +12,7 @@ enum CivilianState {
     Hurt;
     Dead;
     None;
+    Cheering;
 }
 
 class Civilian extends entities.Person {
@@ -34,7 +35,7 @@ class Civilian extends entities.Person {
 	var projectileCanvas: ProjectileCanvas;
 
     var gunShotSound: flixel.system.FlxSound;
-    
+
     override public function new(enemyArray: Array<entities.Person>, projectiles: ProjectileCanvas) {
         super();
         enemies = enemyArray;
@@ -47,6 +48,7 @@ class Civilian extends entities.Person {
         animation.add("idle", [2], 1, true);
         animation.add("shoot", [3], 2, false);
         animation.add("hurt", [4], 2, false);
+        animation.add("cheer", [5, 6], 3, true);
      
         offset.set(14, 48);
         updateHitbox();
@@ -57,16 +59,34 @@ class Civilian extends entities.Person {
 		gunShotSound = FlxG.sound.load(AssetPaths.gunshot__ogg);
     }
 
+    public function startCheering() {
+        new FlxTimer().start(Math.random() * 0.3, function(e) {
+            this.curState = Cheering;
+            this.animation.play("cheer");
+        });
+    }
+
+    var t = 0.0;
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
         timeUntilReady -= elapsed;
+
+        health += elapsed * GameData.CivRegen;
+        health = Math.min(health, GameData.CivHealth);
+
         switch curState {
             case Resting:
                 animation.play("idle");
                 tryShoot();
             case Looting:
             case Dead:
+            case Cheering:
+                t += elapsed;
+                velocity.set(0, 0);
+                animation.play("cheer");
+                offset.y = Math.sin(t * 20) * 3;
+                angle = Math.sin(t * 15) * 10;
             case Shooting: 
                 velocity.set(0, 0);
                 untilDoneShooting -= elapsed;
