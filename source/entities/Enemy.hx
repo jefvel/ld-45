@@ -30,7 +30,7 @@ class Enemy extends entities.Person {
     var gunPosY = 23;
 
     // Shooting
-    public static var shootableEntities = new Array<entities.Person>();
+    var shootableEntities:Array<entities.Person>;
 	var projectileCanvas: ProjectileCanvas;
     var shootTarget: entities.Person;
     var reloaded = true ;
@@ -48,10 +48,12 @@ class Enemy extends entities.Person {
 
     var bulletID = -1;
     
-    override public function new() {
+    override public function new(peopleToShootAt) {
         super();
         personType = Enemy;
         this.health = GameData.EnemyHealth;
+
+        shootableEntities = peopleToShootAt;
 
         loadGraphic(AssetPaths.enemy__png, true, 32, 64);
         animation.add("walk", [0, 1], 3, true);
@@ -59,7 +61,7 @@ class Enemy extends entities.Person {
         animation.add("aim", [4], 1, false);
         animation.add("hurt", [5], 1, true);
 
-		gunShotSound = FlxG.sound.load(AssetPaths.gunshot__wav);
+		gunShotSound = FlxG.sound.load(AssetPaths.gunshot__ogg);
      
         offset.set(16, 48);
         updateHitbox();
