@@ -55,6 +55,8 @@ class MainMenuState extends FlxState
 	{
 		skyLimit = Math.floor(GameData.SkyLimit * 1.7);
 
+		FlxG.mouse.useSystemCursor = true;
+
 		// Scenery
 		var sky = new FlxSprite();
 		sky.makeGraphic(FlxG.width, skyLimit, 0xff41ade9);
