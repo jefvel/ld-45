@@ -409,7 +409,6 @@ class PlayState extends FlxState
 		continueButton = new FlxButton(FlxG.width * 0.6, FlxG.height * buttonYP, "Exit", exitGame);
 		continueButton.setSize(Math.floor(FlxG.width * 0.2), Math.floor(FlxG.height * 0.1));
 		continueButton.setGraphicSize(cast continueButton.width, cast continueButton.height);
-		victoryGroup.add(continueButton);
 
 		progressBar = new FlxSprite();
 		progressBar.loadGraphic(AssetPaths.progressbar__png);
@@ -677,7 +676,9 @@ class PlayState extends FlxState
 		victoryGroup.add(winMan);
 		victoryGroup.add(winArm);
 
-		victoryGroup.add(continueButton);
+		new FlxTimer().start(5.3, function(e) {
+			victoryGroup.add(continueButton);
+		});
 
 
 		victoryText.alpha = 0.0;
