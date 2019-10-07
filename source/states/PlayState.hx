@@ -662,11 +662,20 @@ class PlayState extends FlxState
 		winMan.x = FlxG.width * 0.3;
 		winMan.y = FlxG.height + winMan.height;
 
+		var winArm = new entities.WinArm();
+		winArm.x = FlxG.width * 0.5;
+		winArm.y = FlxG.height + winArm.height;
+
+		FlxTween.tween(winArm, {
+			y: FlxG.height,
+		}, 0.4, { ease: FlxEase.backOut, startDelay: 4.6 });
+
 		FlxTween.tween(winMan, {
 			y: FlxG.height,
-		}, 0.3, { ease: FlxEase.backOut, startDelay: 4.63 });
+		}, 0.6, { ease: FlxEase.backOut, startDelay: 4.63 });
 
 		victoryGroup.add(winMan);
+		victoryGroup.add(winArm);
 
 		victoryGroup.add(continueButton);
 

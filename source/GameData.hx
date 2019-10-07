@@ -20,7 +20,7 @@ class GameData {
     public static inline var EnemyReloadTime = 1.7;
     public static inline var EnemyHurtRecoveryTime = 0.2;
 
-    public static var VictoryBoundaryX = 100; //WorldWidth - 100;
+    public static var VictoryBoundaryX = WorldWidth - 100;
 
     public static inline var CivHealth = 36.0;
     public static inline var CivCost = 3;

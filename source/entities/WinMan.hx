@@ -14,7 +14,7 @@ class WinMan extends FlxSprite {
     var t = 0.0;
     public override function update(elapsed:Float) {
         super.update(elapsed);
-        t += elapsed * 1.6;
+        t += elapsed * 1.3;
         offset.y = height - 30 + Math.sin(t * 6) * 5;
         angle = Math.sin(t) * 5;
     }
