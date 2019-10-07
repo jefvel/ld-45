@@ -34,6 +34,19 @@
             display: flex;
             align-items: center;
             justify-content: center;
+			flex-direction: column;
+			color: white;
+			font-family: 'Nokia Cellphone FC Small';
+		}
+		.link-container {
+			text-align: right;
+			width: 100%;
+		}
+		a {
+			color: white;
+			text-decoration: none;
+			display: inline-block;
+			margin: 1em;
 		}
 		#openfl-content { 
             ::if (WIN_BACKGROUND)::background: #000000; ::end::width: ::if (WIN_RESIZABLE)::100%::elseif (WIN_WIDTH > 0)::::WIN_WIDTH::px::else::100%::end::; height: ::if (WIN_RESIZABLE)::100%::elseif (WIN_WIDTH > 0)::::WIN_HEIGHT::px::else::100%::end::;
@@ -58,6 +71,9 @@
 	<noscript>This webpage makes extensive use of JavaScript. Please enable JavaScript in your web browser to view this page.</noscript>
 	
 	<div id="openfl-content"></div>
+	<div class="link-container">
+		<a target="_blank" href="https://ldjam.com/events/ludum-dare/45/$162558">Info</a>
+	</div>
 	
 	<script type="text/javascript">
 		lime.embed ("::APP_FILE::", "openfl-content", ::WIN_WIDTH::, ::WIN_HEIGHT::, { parameters: {} });

@@ -242,8 +242,10 @@ class Enemy extends entities.Person {
             var worldPos = FlxPoint.get(aimPosX, aimPosY);
             var gunPos = FlxPoint.get(x + (flipX ? 32 - gunPosX : gunPosX), y + gunPosY);
             var v = flixel.math.FlxVector.get(worldPos.x - x, worldPos.y - y);
+            /*
             v.normalize();
             v.scale(500);
+            */
 
 
             var tpos = FlxPoint.get(x + v.x, y + v.y);

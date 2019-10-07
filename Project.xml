@@ -14,7 +14,7 @@
 	<!-- ____________________________ Window Settings ___________________________ -->
 
 	<!--These window settings apply to all targets-->
-	<window width="480" height="640" fps="60" background="#ffffff" hardware="true" vsync="false" />
+	<window width="480" height="640" fps="60" background="#367ba0" hardware="true" vsync="false" />
 
 	<!--HTML5-specific-->
 	<window if="html5" resizable="false" />
@@ -79,6 +79,5 @@
 	<!-- _________________________________ Custom _______________________________ -->
 
 	<!--Place custom nodes like icons here (higher priority to override the HaxeFlixel icon)-->
-
 	<template path="templates" />
 </project>

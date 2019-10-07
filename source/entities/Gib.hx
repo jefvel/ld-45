@@ -16,7 +16,7 @@ class Gib extends flixel.group.FlxSpriteGroup {
                 for (i in 0...5) {
                     var s = new FlxSprite(x, -40 + y + i * 20 + Math.random() * 10);
                     s.loadGraphic(AssetPaths.enemygib__png, true, 32, 32, false);
-                    s.health = 20.0 + Math.random() * 5;
+                    s.health = 5.0 + Math.random() * 5;
                     s.angularVelocity = (-50.0 + Math.random() * 100) * 3.0;
                     s.animation.frameIndex = i;
                     s.acceleration.y = 900.0;
@@ -26,7 +26,31 @@ class Gib extends flixel.group.FlxSpriteGroup {
                     add(s);
                 }
             case Player:
+                for (i in 0...6) {
+                    var s = new FlxSprite(x, -40 + y + i * 20 + Math.random() * 10);
+                    s.loadGraphic(AssetPaths.playergib__png, true, 64, 64, false);
+                    s.health = 5.0 + Math.random() * 5;
+                    s.angularVelocity = (-50.0 + Math.random() * 100) * 3.0;
+                    s.animation.frameIndex = i;
+                    s.acceleration.y = 900.0;
+                    s.angularDrag = 40;
+                    s.drag.x = 50;
+                    s.velocity.set((Math.random() * 100 - 50) * 3.0, -50 - Math.random() * 250);
+                    add(s);
+                }
             case Citizen:
+                for (i in 0...5) {
+                    var s = new FlxSprite(x, -40 + y + i * 20 + Math.random() * 10);
+                    s.loadGraphic(AssetPaths.civiliangib__png, true, 32, 32, false);
+                    s.health = 5.0 + Math.random() * 5;
+                    s.angularVelocity = (-50.0 + Math.random() * 100) * 3.0;
+                    s.animation.frameIndex = i;
+                    s.acceleration.y = 900.0;
+                    s.angularDrag = 40;
+                    s.drag.x = 50;
+                    s.velocity.set((Math.random() * 100 - 50) * 3.0, -50 - Math.random() * 250);
+                    add(s);
+                }
         }
     }
 
@@ -34,7 +58,7 @@ class Gib extends flixel.group.FlxSpriteGroup {
         super.update(elapsed);
         lifeTimeLeft -= elapsed;
         for (c in this.iterator()) {
-            c.hurt(0.1);
+            c.hurt(elapsed);
             if (c.y > floorY) {
                 c.velocity.y *= -0.8;
                 c.velocity.x *= 0.9;
