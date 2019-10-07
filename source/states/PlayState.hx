@@ -72,6 +72,13 @@ class PlayState extends FlxState
 	var collectedBarrelCount = 0;
 	var barrelsUntilNewCiv = 0;
 
+	var victoryAchieved: Bool;
+
+	// Victory UI
+	var victoryGroup: FlxSpriteGroup;
+	var victoryText: FlxText;
+	var continueButton: FlxButton;
+
 	// Death UI
 	var deathGroup: FlxSpriteGroup;
 	var deathText: FlxText;
@@ -263,6 +270,8 @@ class PlayState extends FlxState
 	{
 		super.create();
 
+		victoryAchieved = false;
+
 		ShotTools.NpcHitSignal = new FlxTypedSignal<entities.Person->Void>();
 		ShotTools.NpcHitSignal.add(npcHitCallback);
 
@@ -341,6 +350,20 @@ class PlayState extends FlxState
 		mainMenuButton.setGraphicSize(cast mainMenuButton.width, cast mainMenuButton.height);
 		deathGroup.add(mainMenuButton);
 
+		// victory UI
+		victoryGroup = new FlxSpriteGroup();
+		victoryGroup.scrollFactor.set(0, 0);
+
+		victoryText = new FlxText(0, FlxG.height * 0.3, FlxG.width, "V I C T O R Y", 52);
+		victoryText.alignment = FlxTextAlign.CENTER;
+		victoryText.color = 0xFF265C42;
+		victoryGroup.add(victoryText);
+		
+		continueButton = new FlxButton(FlxG.width * 0.4, FlxG.height * 0.8, "Exit", exitGame);
+		continueButton.setSize(Math.floor(FlxG.width * 0.2), Math.floor(FlxG.height * 0.1));
+		continueButton.setGraphicSize(cast continueButton.width, cast continueButton.height);
+		victoryGroup.add(continueButton);
+
 		spawn();
 	}
 
@@ -363,8 +386,10 @@ class PlayState extends FlxState
 	{
 		super.update(elapsed);
 		time += elapsed;
-		if (!player.body.alive)
+
+		if (!player.body.alive || victoryAchieved) {
 			return;
+		}
 
 
 		var sp = saloon.getScreenPosition();
@@ -450,11 +475,64 @@ class PlayState extends FlxState
 		// Update score
 		scoreDisplay.text = "" + Score.PlayerScore;
 		scoreDisplay.color = Score.PlayerScore < 0 ? 0xFF9E2835 : 0xFF193C3E;
+
+		// Check victory condition
+		for (e in npcs) {
+			if (e.personType == PersonType.Citizen && e.x > GameData.VictoryBoundaryX) {
+				victoryAchieved = true;
+				displayVictoryScreen();
+				Score.setPlayerHighScore();
+			}
+		}
 	}
 
 	function displayDeathScreen() {
+		if (!victoryAchieved) {
+			scoreDisplay.visible = !scoreDisplay.visible;
+			add(deathGroup);
+		}
+	}
+
+	function displayVictoryScreen() {
 		scoreDisplay.visible = !scoreDisplay.visible;
-		add(deathGroup);
+
+		var newHighScoreSet = Score.PlayerScore > Score.HighScore;
+		if (newHighScoreSet) {
+			var newHighScoreSetDisplay = new FlxText(
+				0,
+				FlxG.height * 0.5,
+				FlxG.width,
+				"You set a new highscore!",
+				24
+			);
+			newHighScoreSetDisplay.alignment = FlxTextAlign.CENTER;
+			newHighScoreSetDisplay.color = 0xFF164C32;
+			victoryGroup.add(newHighScoreSetDisplay);
+		}
+
+		var oldHighScoreDisplay = new FlxText(
+			0,
+			FlxG.height * 0.6,
+			FlxG.width,
+			"Current highscore: " + Score.HighScore,
+			16
+		);
+		oldHighScoreDisplay.alignment = FlxTextAlign.CENTER;
+		oldHighScoreDisplay.color = 0xFF164C32;
+		victoryGroup.add(oldHighScoreDisplay);
+
+		var yourScoreDisplay = new FlxText(
+			0,
+			FlxG.height * 0.7,
+			FlxG.width,
+			newHighScoreSet ? "New highscore: " + Score.PlayerScore : "Your score: " + Score.PlayerScore,
+			16
+		);
+		yourScoreDisplay.alignment = FlxTextAlign.CENTER;
+		yourScoreDisplay.color = 0xFF164C32;
+		victoryGroup.add(yourScoreDisplay);
+
+		add(victoryGroup);
 	}
 
 	function npcHitCallback(target: entities.Person) {
@@ -508,8 +586,6 @@ class PlayState extends FlxState
 
 	function restartGame() {
 		score.toggleTimeScore();
-		if (Score.PlayerScore > GameData.HighScore)
-			GameData.HighScore = Score.PlayerScore;
 		Score.PlayerScore = 0;
 
 		FlxG.resetState();
@@ -517,8 +593,6 @@ class PlayState extends FlxState
 
 	function exitGame() {
 		score.toggleTimeScore();
-		if (Score.PlayerScore > GameData.HighScore)
-			GameData.HighScore = Score.PlayerScore;
 		Score.PlayerScore = 0;
 
 		FlxG.switchState(new MainMenuState());

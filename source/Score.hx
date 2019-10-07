@@ -30,6 +30,12 @@ class Score {
         }
     }
 
+	public static function setPlayerHighScore() {
+        if (Score.PlayerScore > Score.HighScore) {
+            Score.HighScore = Score.PlayerScore;
+        }
+    }
+
     public static function addEnemyKill() {
         PlayerScore += EnemyKillPoints;
     }
