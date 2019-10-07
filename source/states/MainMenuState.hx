@@ -99,13 +99,13 @@ class MainMenuState extends FlxState
 			FlxG.height * 0.2,
 			FlxG.width - 32,
 			"
-				Bandits are at it by Cool Saloon again.
+				Bandits are at it by The Cool Saloon again.
 				Go deliver 'em some cold-served justice.
 				Your ol' horse Nothing is a stubborn beast.
 				Only the recoil of your gun will get her moving.
-				But watch out!
-				The saloon gets very busy during the day so take care
-				not to shoot the locals when making the horse move!
+
+				The locals will join arms in exchange for bandit liquor,
+				but try not to shoot them when making the horse move!
 			",
 			12
 		);
