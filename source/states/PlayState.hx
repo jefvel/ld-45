@@ -41,8 +41,6 @@ class PlayState extends FlxState
 	var bloodCanvas: BloodCanvas;
 	var saloon: entities.Saloon;
 
-	var npcs: Array<entities.Person>;
-
 	var gunShotSound: FlxSound;
 	var crushSound: FlxSound;
 	var impactSound: FlxSound;
@@ -66,6 +64,7 @@ class PlayState extends FlxState
 
 	var barrelDepositionQueue: Array<Barrel>;
 
+	var npcs: Array<entities.Person>;
 	var enemies: Array<entities.Person>;
     var friendlies:Array<entities.Person>;
 
@@ -96,7 +95,7 @@ class PlayState extends FlxState
 		collectedBarrels = [];
 		allBarrels = [];
 		barrelDepositionQueue = [];
-		
+
 		projectileCanvas = new ProjectileCanvas();
 		add(projectileCanvas);
 
@@ -108,16 +107,12 @@ class PlayState extends FlxState
 		camera.targetOffset.set(-32, -168);
 		friendlies.push(player.body);
 
-		// Spawn civilians
-		for (i in 0...1) {
-			//spawnCitizen(saloon.door.x, saloon.door.y + 30);
-		}
-		
 		barrelArrow = new FlxSprite();
 		barrelArrow.loadGraphic(AssetPaths.arrow__png);
 		barrelArrow.scrollFactor.set(0, 0);
 		barrelArrow.y = GameData.SkyLimit - 200;
 		barrelArrow.x = 50;
+
 		add(barrelArrow);
 
 		spawnEnemyWave();
@@ -171,7 +166,7 @@ class PlayState extends FlxState
 	}
 
 	function spawnEnemyWave() {
-		// Spawn enemies 
+		// Spawn enemies
 		// Do last so it can collect shootable entities in static class member
 		for (i in 0...5) {
 			var yPos = (Math.random() * FlxG.height);
@@ -249,7 +244,7 @@ class PlayState extends FlxState
 		// Ground details (rocks, plants etc)
 		for (i in 0...RockAmount) {
 			var r = new FlxSprite(
-				Math.random() * GameData.WorldWidth, 
+				Math.random() * GameData.WorldWidth,
 				GameData.SkyLimit + Math.random() * GameData.GroundHeight
 			);
 			r.loadGraphic(AssetPaths.rocks__png, true, 16, 16);
@@ -292,7 +287,7 @@ class PlayState extends FlxState
 		friendlies = [];
 
 		barrelsUntilNewCiv = GameData.CivCost;
-		
+
 		sky = new FlxSprite();
 		sky.makeGraphic(FlxG.width, GameData.SkyLimit, 0xff41ade9);
 		add(sky);
@@ -305,7 +300,7 @@ class PlayState extends FlxState
 		ground.scrollFactor.set(0, 1.0);
 
 		createRocksAndStuff();
-		
+
 		shadows = new flixel.group.FlxTypedGroup<Shadow>();
 		add(shadows);
 
@@ -344,7 +339,7 @@ class PlayState extends FlxState
 		retryButton.setSize(Math.floor(FlxG.width * 0.2), Math.floor(FlxG.height * 0.1));
 		retryButton.setGraphicSize(cast retryButton.width, cast retryButton.height);
 		deathGroup.add(retryButton);
-		
+
 		mainMenuButton = new FlxButton(FlxG.width * 0.55, FlxG.height * 0.5, "Exit", exitGame);
 		mainMenuButton.setSize(Math.floor(FlxG.width * 0.2), Math.floor(FlxG.height * 0.1));
 		mainMenuButton.setGraphicSize(cast mainMenuButton.width, cast mainMenuButton.height);
@@ -358,7 +353,7 @@ class PlayState extends FlxState
 		victoryText.alignment = FlxTextAlign.CENTER;
 		victoryText.color = 0xFF265C42;
 		victoryGroup.add(victoryText);
-		
+
 		continueButton = new FlxButton(FlxG.width * 0.4, FlxG.height * 0.8, "Exit", exitGame);
 		continueButton.setSize(Math.floor(FlxG.width * 0.2), Math.floor(FlxG.height * 0.1));
 		continueButton.setGraphicSize(cast continueButton.width, cast continueButton.height);
@@ -404,19 +399,15 @@ class PlayState extends FlxState
 		}
 
 		reloadTime -= elapsed;
-		
-		var mouseWorldPos = FlxG.mouse.getWorldPosition();
 
-		if (FlxG.mouse.justPressedMiddle) {
-			spawnEnemy(mouseWorldPos.x, mouseWorldPos.y);
-		}
+		var mouseWorldPos = FlxG.mouse.getWorldPosition();
 
 		if (FlxG.mouse.pressed && reloadTime <= 0) {
 			reloadTime = GameData.ReloadTime;
 			var arm = player.arm;
 			player.shoot(mouseWorldPos.x, mouseWorldPos.y);
 			var gunPos = arm.getMuzzleWorldPos();
-			
+
 			var v = flixel.math.FlxVector.get(mouseWorldPos.x - arm.x, mouseWorldPos.y - arm.y);
 			v.normalize();
 			v.scale(500);
@@ -543,7 +534,7 @@ class PlayState extends FlxState
 					gameoverSound.play(true);
 					displayDeathScreen();
 				}
-			case Enemy: 
+			case Enemy:
 				impactSound.play();
 				target.hurt(GameData.GunDamage);
 				if (!target.alive) {
