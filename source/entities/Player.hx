@@ -26,7 +26,7 @@ class Player extends FlxSpriteGroup {
 
     var shadow: FlxSprite;
 
-    var margin: Float = 64;
+    var margin: Float = 100;
     var offsetY = 25;
 
     override public function new() {
@@ -82,6 +82,7 @@ class Player extends FlxSpriteGroup {
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+        this.arm.visible = this.body.alive;
         totalTime += elapsed;
 
         if (y < GameData.SkyLimit) {
@@ -131,8 +132,8 @@ class Player extends FlxSpriteGroup {
         if (x > GameData.WorldWidth - margin) {
             x = GameData.WorldWidth - margin;
         }
-        if (y > GameData.WorldHeight - margin * 2) {
-            y = GameData.WorldHeight - margin * 2;
+        if (y > GameData.WorldHeight - margin * 1.2) {
+            y = GameData.WorldHeight - margin * 1.2;
         }
 	}
 

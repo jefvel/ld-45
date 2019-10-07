@@ -9,6 +9,7 @@ enum CivilianState {
     Resting;
     Shooting;
     Looting;
+    Hurt;
     Dead;
     None;
 }
@@ -21,6 +22,7 @@ class Civilian extends entities.Person {
     private var destLambda: Float = 5;
     private var speed: Float = 50;
 
+    var hurtTimeLeft = 0.0;
     private var timer: FlxTimer;
 
     private var timeUntilReady = 0.0;
@@ -44,6 +46,7 @@ class Civilian extends entities.Person {
         animation.add("walk", [0, 1], 2, true);
         animation.add("idle", [2], 1, true);
         animation.add("shoot", [3], 2, false);
+        animation.add("hurt", [4], 2, false);
      
         offset.set(14, 48);
         updateHitbox();
@@ -72,6 +75,12 @@ class Civilian extends entities.Person {
                         move();
                     }
                 }
+            case Hurt:
+                hurtTimeLeft -= elapsed;
+                velocity.set(0, 0);
+                if (hurtTimeLeft <= 0) {
+                    rest();
+                }
             case Moving:
                 animation.play("walk");
 
@@ -93,6 +102,13 @@ class Civilian extends entities.Person {
                 move();
         }
 	}
+
+    public override function hurt(amount: Float) {
+        super.hurt(amount);
+        animation.play("hurt");
+        hurtTimeLeft = GameData.CivHurtRecoveryTime;
+        curState = Hurt;
+    }
 
     function tryShoot() {
         if (timeUntilReady > 0) {

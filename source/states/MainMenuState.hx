@@ -53,6 +53,7 @@ class MainMenuState extends FlxState
 
 	override public function create():Void
 	{
+		FlxG.timeScale = 1.0;
 		skyLimit = Math.floor(GameData.SkyLimit * 1.7);
 
 		FlxG.mouse.useSystemCursor = true;

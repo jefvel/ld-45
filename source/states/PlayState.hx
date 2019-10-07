@@ -1,5 +1,6 @@
 package states;
 
+import flixel.math.FlxVector;
 import openfl.display.Sprite;
 import flixel.group.FlxSpriteGroup;
 import flixel.ui.FlxButton;
@@ -41,8 +42,6 @@ class PlayState extends FlxState
 	var bloodCanvas: BloodCanvas;
 	var saloon: entities.Saloon;
 
-	var npcs: Array<entities.Person>;
-
 	var gunShotSound: FlxSound;
 	var crushSound: FlxSound;
 	var impactSound: FlxSound;
@@ -66,6 +65,7 @@ class PlayState extends FlxState
 
 	var barrelDepositionQueue: Array<Barrel>;
 
+	var npcs: Array<entities.Person>;
 	var enemies: Array<entities.Person>;
     var friendlies:Array<entities.Person>;
 
@@ -87,6 +87,12 @@ class PlayState extends FlxState
 
 	var barrelArrow: FlxSprite;
 
+	// var crossHair: FlxSprite;
+
+	var progressBar: FlxSprite;
+	var pBarHeight = 16.0;
+	var indicator: FlxSprite;
+
 	function spawn() {
 		FlxG.camera.setScrollBoundsRect(0, 0, GameData.WorldWidth, FlxG.stage.stageHeight, true);
 
@@ -96,7 +102,7 @@ class PlayState extends FlxState
 		collectedBarrels = [];
 		allBarrels = [];
 		barrelDepositionQueue = [];
-		
+
 		projectileCanvas = new ProjectileCanvas();
 		add(projectileCanvas);
 
@@ -108,16 +114,12 @@ class PlayState extends FlxState
 		camera.targetOffset.set(-32, -168);
 		friendlies.push(player.body);
 
-		// Spawn civilians
-		for (i in 0...1) {
-			//spawnCitizen(saloon.door.x, saloon.door.y + 30);
-		}
-		
 		barrelArrow = new FlxSprite();
 		barrelArrow.loadGraphic(AssetPaths.arrow__png);
 		barrelArrow.scrollFactor.set(0, 0);
 		barrelArrow.y = GameData.SkyLimit - 200;
 		barrelArrow.x = 50;
+
 		add(barrelArrow);
 
 		spawnEnemyWave();
@@ -171,7 +173,7 @@ class PlayState extends FlxState
 	}
 
 	function spawnEnemyWave() {
-		// Spawn enemies 
+		// Spawn enemies
 		// Do last so it can collect shootable entities in static class member
 		for (i in 0...5) {
 			var yPos = (Math.random() * FlxG.height);
@@ -185,6 +187,10 @@ class PlayState extends FlxState
 	}
 
 	public function spawnEnemy(x, y) {
+		if (enemies.length >= GameData.MaxEnemies) {
+			return;
+		}
+
 		var enemy = new Enemy(friendlies);
 		enemy.setPosition(x, y);
 		peopleGroup.add(enemy);
@@ -246,10 +252,17 @@ class PlayState extends FlxState
 			bgDetails.add(r);
 		}
 
+		var exitSign = new FlxSprite();
+		exitSign.loadGraphic(AssetPaths.exitsign__png);
+		exitSign.x = GameData.WorldWidth - 30 - exitSign.width;
+		exitSign.offset.y = 45;
+		exitSign.y = GameData.SkyLimit;
+		bgDetails.add(exitSign);
+
 		// Ground details (rocks, plants etc)
 		for (i in 0...RockAmount) {
 			var r = new FlxSprite(
-				Math.random() * GameData.WorldWidth, 
+				Math.random() * GameData.WorldWidth,
 				GameData.SkyLimit + Math.random() * GameData.GroundHeight
 			);
 			r.loadGraphic(AssetPaths.rocks__png, true, 16, 16);
@@ -269,6 +282,8 @@ class PlayState extends FlxState
 	override public function create():Void
 	{
 		super.create();
+
+		FlxG.timeScale = 1.0;
 
 		victoryAchieved = false;
 
@@ -292,7 +307,7 @@ class PlayState extends FlxState
 		friendlies = [];
 
 		barrelsUntilNewCiv = GameData.CivCost;
-		
+
 		sky = new FlxSprite();
 		sky.makeGraphic(FlxG.width, GameData.SkyLimit, 0xff41ade9);
 		add(sky);
@@ -305,7 +320,7 @@ class PlayState extends FlxState
 		ground.scrollFactor.set(0, 1.0);
 
 		createRocksAndStuff();
-		
+
 		shadows = new flixel.group.FlxTypedGroup<Shadow>();
 		add(shadows);
 
@@ -318,6 +333,20 @@ class PlayState extends FlxState
 		gibGroup = new FlxGroup();
 		add(gibGroup);
 
+
+		spawn();
+/*
+		crossHair = new FlxSprite();
+		crossHair.loadGraphic(AssetPaths.crosshair__png);
+		crossHair.offset.set(16, 16);
+		crossHair.scrollFactor.set(0, 0);
+		add(crossHair);
+		crossHair.visible = false;
+*/
+		createUI();
+	}
+
+	function createUI() {
 		score = new Score();
 		scoreDisplay = new FlxText(
 			FlxG.width * 0.05,
@@ -329,23 +358,25 @@ class PlayState extends FlxState
 		scoreDisplay.scrollFactor.set(0, 0);
 		scoreDisplay.color = 0xFF9E2835;
 		add(scoreDisplay);
+		scoreDisplay.visible = false;
 		score.toggleTimeScore();
 
 		// Death UI
 		deathGroup = new FlxSpriteGroup();
 		deathGroup.scrollFactor.set(0, 0);
 
-		deathText = new FlxText(0, FlxG.height * 0.3, FlxG.width, "D E A D", 64);
+		deathText = new FlxText(0, FlxG.height * 0.15, FlxG.width, "D E A D", 64);
 		deathText.alignment = FlxTextAlign.CENTER;
 		deathText.color = 0xFF9E2835;
 		deathGroup.add(deathText);
+		var buttonYP = 0.8;
 
-		retryButton = new FlxButton(FlxG.width * 0.3, FlxG.height * 0.5, "Retry", restartGame);
+		retryButton = new FlxButton(FlxG.width * 0.3, FlxG.height * buttonYP, "Retry", restartGame);
 		retryButton.setSize(Math.floor(FlxG.width * 0.2), Math.floor(FlxG.height * 0.1));
 		retryButton.setGraphicSize(cast retryButton.width, cast retryButton.height);
 		deathGroup.add(retryButton);
-		
-		mainMenuButton = new FlxButton(FlxG.width * 0.55, FlxG.height * 0.5, "Exit", exitGame);
+
+		mainMenuButton = new FlxButton(FlxG.width * 0.55, FlxG.height * buttonYP, "Exit", exitGame);
 		mainMenuButton.setSize(Math.floor(FlxG.width * 0.2), Math.floor(FlxG.height * 0.1));
 		mainMenuButton.setGraphicSize(cast mainMenuButton.width, cast mainMenuButton.height);
 		deathGroup.add(mainMenuButton);
@@ -354,17 +385,32 @@ class PlayState extends FlxState
 		victoryGroup = new FlxSpriteGroup();
 		victoryGroup.scrollFactor.set(0, 0);
 
-		victoryText = new FlxText(0, FlxG.height * 0.3, FlxG.width, "V I C T O R Y", 52);
+		victoryText = new FlxText(0, FlxG.height * 0.15, FlxG.width, "V I C T O R Y", 52);
 		victoryText.alignment = FlxTextAlign.CENTER;
 		victoryText.color = 0xFF265C42;
 		victoryGroup.add(victoryText);
-		
-		continueButton = new FlxButton(FlxG.width * 0.4, FlxG.height * 0.8, "Exit", exitGame);
+
+		continueButton = new FlxButton(FlxG.width * 0.4, FlxG.height * buttonYP, "Exit", exitGame);
 		continueButton.setSize(Math.floor(FlxG.width * 0.2), Math.floor(FlxG.height * 0.1));
 		continueButton.setGraphicSize(cast continueButton.width, cast continueButton.height);
 		victoryGroup.add(continueButton);
 
-		spawn();
+		progressBar = new FlxSprite();
+		progressBar.loadGraphic(AssetPaths.progressbar__png);
+		add(progressBar);
+		progressBar.offset.y = 32;
+		progressBar.x = (FlxG.width - progressBar.width) * 0.5;
+		progressBar.y = progressBar.x;
+		progressBar.scrollFactor.set(0, 0);
+
+		indicator = new FlxSprite();
+		indicator.loadGraphic(AssetPaths.progressbarindicator__png);
+		indicator.offset.set(indicator.width * 0.5, indicator.height * 0.5);
+		add(indicator);
+		indicator.y = progressBar.y + pBarHeight * 0.5 - 10;
+		indicator.x = progressBar.x + pBarHeight;
+		indicator.scrollFactor.set(0, 0);
+
 	}
 
 	function barrelDeposited(b: Barrel) {
@@ -382,6 +428,13 @@ class PlayState extends FlxState
 	}
 
 	var time = 0.0;
+	var lastMouseX = 0.0;
+	var lastMouseY = 0.0;
+	var curMouseX = 0.0;
+	var curMouseY = 0.0;
+
+	var firstMoveDone = false;
+
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
@@ -391,6 +444,33 @@ class PlayState extends FlxState
 			return;
 		}
 
+		var progress = 0.0;
+		var bestCitizen = null;
+		for (e in friendlies) {
+			if (e.personType == Player) {
+				continue;
+			}
+
+			if(bestCitizen == null) {
+				bestCitizen = e;
+				continue;
+			}
+
+			if (e.x > bestCitizen.x) {
+				bestCitizen = e;
+			}
+		}
+
+		if (bestCitizen != null && bestCitizen.x > 0) {
+			progress = bestCitizen.x / GameData.VictoryBoundaryX;
+			progress = Math.min(1.0, progress);
+		}
+
+		var pw = progressBar.width - pBarHeight;
+		pw *= progress;
+		var targetX = progressBar.x + pBarHeight * 0.5 + pw;
+		indicator.drag.x = 90;
+		indicator.velocity.x = (targetX - indicator.x);
 
 		var sp = saloon.getScreenPosition();
 		barrelArrow.visible = collectedBarrels.length > 0;
@@ -404,22 +484,51 @@ class PlayState extends FlxState
 		}
 
 		reloadTime -= elapsed;
-		
-		var mouseWorldPos = FlxG.mouse.getWorldPosition();
 
-		if (FlxG.mouse.justPressedMiddle) {
-			spawnEnemy(mouseWorldPos.x, mouseWorldPos.y);
+		var mouseWorldPos = FlxG.mouse.getWorldPosition();
+		var arm = player.arm;
+
+		// Virtual joystick control
+		/*
+		if (FlxG.mouse.justPressed) {
+			var sp = arm.getScreenPosition();
+			lastMouseX = sp.x;
+			lastMouseY = sp.y;
+			curMouseX = FlxG.mouse.screenX;
+			curMouseY = FlxG.mouse.screenY;
+			crossHair.x = curMouseX;
+			crossHair.y = curMouseY;
+			firstMoveDone = false;
 		}
+
+		crossHair.visible = FlxG.mouse.pressed;
+
+		if (FlxG.mouse.pressed && FlxG.mouse.justMoved) {
+			if (!firstMoveDone) {
+				firstMoveDone = true;
+				var s = crossHair.getScreenPosition();
+				lastMouseX = s.x;
+				lastMouseY = s.y;
+			}
+			var v = FlxVector.get(curMouseX - FlxG.mouse.screenX, curMouseY - FlxG.mouse.screenY);
+			//lastMouseX = curMouseX;
+			//lastMouseY = curMouseY;
+			curMouseX = FlxG.mouse.screenX;
+			curMouseY = FlxG.mouse.screenY;
+		}
+		*/
 
 		if (FlxG.mouse.pressed && reloadTime <= 0) {
 			reloadTime = GameData.ReloadTime;
 			var arm = player.arm;
 			player.shoot(mouseWorldPos.x, mouseWorldPos.y);
 			var gunPos = arm.getMuzzleWorldPos();
-			
+
 			var v = flixel.math.FlxVector.get(mouseWorldPos.x - arm.x, mouseWorldPos.y - arm.y);
+			//var v = flixel.math.FlxVector.get(curMouseX - lastMouseX, curMouseY - lastMouseY);
 			v.normalize();
 			v.scale(500);
+
 
 			var tpos = FlxPoint.get(gunPos.x + v.x, gunPos.y + v.y);
 
@@ -442,7 +551,10 @@ class PlayState extends FlxState
 			gunShotSound.stop();
 			gunShotSound.play();
 
+			// White line bullet thing
 			projectileCanvas.addShot(gunPos.x, gunPos.y, tpos.x, tpos.y);
+
+			// Add muzzle flash
 			var mf = new entities.MuzzleFlash();
 			mf.angle = arm.angle;
 			mf.x = gunPos.x;
@@ -488,14 +600,12 @@ class PlayState extends FlxState
 
 	function displayDeathScreen() {
 		if (!victoryAchieved) {
-			scoreDisplay.visible = !scoreDisplay.visible;
+			// scoreDisplay.visible = !scoreDisplay.visible;
 			add(deathGroup);
 		}
 	}
 
 	function displayVictoryScreen() {
-		scoreDisplay.visible = !scoreDisplay.visible;
-
 		var newHighScoreSet = Score.PlayerScore > Score.HighScore;
 		if (newHighScoreSet) {
 			var newHighScoreSetDisplay = new FlxText(
@@ -541,9 +651,11 @@ class PlayState extends FlxState
 				target.hurt(GameData.GunDamage);
 				if (!target.alive) {
 					gameoverSound.play(true);
+					FlxG.timeScale = 0.2;
+					gibGroup.add(new entities.Gib(Player, target.x - 20, target.y - 50));
 					displayDeathScreen();
 				}
-			case Enemy: 
+			case Enemy:
 				impactSound.play();
 				target.hurt(GameData.GunDamage);
 				if (!target.alive) {
@@ -556,6 +668,7 @@ class PlayState extends FlxState
 				target.hurt(GameData.GunDamage);
 				if (!target.alive) {
 					Score.addCivilianKill();
+					gibGroup.add(new entities.Gib(Citizen, target.x, target.y));
 				}
 		}
 
